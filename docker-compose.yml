@@ -11,4 +11,4 @@ services:
       - VERBOSE=${VERBOSE:-false}
     volumes:
       - ${MEDIA_PATH:-./media}:/media
-    command: python -m src.cli /media --dry-run --verbose
+    command: media-renamer /media --dry-run --verbose

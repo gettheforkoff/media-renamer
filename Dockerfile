@@ -1,19 +1,74 @@
-FROM python:3.11-slim
+# Build stage
+FROM python:3.11-slim AS builder
 
-WORKDIR /app
-
+# Install system dependencies for building
 RUN apt-get update && apt-get install -y \
     libmediainfo0v5 \
     libmediainfo-dev \
+    curl \
+    gcc \
+    g++ \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Install uv
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/root/.local/bin:$PATH"
 
-COPY src/ ./src/
+WORKDIR /build
 
-ENV PYTHONPATH=/app
+# Copy project files
+COPY pyproject.toml ./
+COPY README.md ./
+COPY media_renamer/ ./media_renamer/
 
+# Install dependencies and PyInstaller using uv
+RUN uv venv && \
+    . .venv/bin/activate && \
+    uv pip install -e . && \
+    uv pip install pyinstaller
+
+# Build the binary directly with PyInstaller
+RUN . .venv/bin/activate && \
+    pyinstaller --onefile --name media-renamer \
+        --hidden-import media_renamer.cli \
+        --hidden-import media_renamer.config \
+        --hidden-import media_renamer.models \
+        --hidden-import media_renamer.metadata_extractor \
+        --hidden-import media_renamer.api_clients \
+        --hidden-import media_renamer.renamer \
+        --hidden-import guessit \
+        --hidden-import pymediainfo \
+        --hidden-import requests \
+        --hidden-import click \
+        --hidden-import rich \
+        --hidden-import pydantic \
+        --hidden-import python_dateutil \
+        --hidden-import dotenv \
+        media_renamer/main.py
+
+# Runtime stage
+FROM debian:12-slim AS runtime
+
+# Install only runtime dependencies
+RUN apt-get update && apt-get install -y \
+    libmediainfo0v5 \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Create a non-root user
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+
+# Copy the binary from build stage
+COPY --from=builder /build/dist/media-renamer /usr/local/bin/media-renamer
+
+# Make sure the binary is executable
+RUN chmod +x /usr/local/bin/media-renamer
+
+# Create volume for media files
 VOLUME ["/media"]
 
-CMD ["python", "-m", "src.cli", "/media"]
+# Switch to non-root user
+USER appuser
+
+# Default command
+CMD ["/usr/local/bin/media-renamer", "/media", "--dry-run", "--verbose"]
