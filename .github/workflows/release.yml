@@ -1,0 +1,225 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v3
+      with:
+        version: "latest"
+
+    - name: Set up Python
+      run: uv python install 3.11
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libmediainfo0v5 libmediainfo-dev
+
+    - name: Create virtual environment
+      run: uv venv
+
+    - name: Install dependencies
+      run: |
+        uv pip install -e .
+        uv pip install pytest pytest-cov black ruff mypy
+
+    - name: Run tests
+      run: uv run pytest
+
+    - name: Run linting
+      run: |
+        uv run black --check media_renamer/
+        uv run ruff check media_renamer/
+
+    - name: Run type checking
+      run: uv run mypy media_renamer/
+
+  build-release-docker:
+    runs-on: ubuntu-latest
+    needs: test
+    
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=semver,pattern={{major}}
+          type=raw,value=latest
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        target: runtime
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        platforms: linux/amd64,linux/arm64
+
+  build-release-binaries:
+    runs-on: ${{ matrix.os }}
+    needs: test
+    
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: media-renamer-linux-amd64
+            binary_path: dist/media-renamer
+          - os: macos-latest
+            artifact_name: media-renamer-macos-universal
+            binary_path: dist/media-renamer
+          - os: windows-latest
+            artifact_name: media-renamer-windows-amd64.exe
+            binary_path: dist/media-renamer.exe
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v3
+      with:
+        version: "latest"
+
+    - name: Install system dependencies (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libmediainfo0v5 libmediainfo-dev
+
+    - name: Install system dependencies (macOS)
+      if: matrix.os == 'macos-latest'
+      run: |
+        brew install media-info
+
+    - name: Install system dependencies (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        choco install mediainfo
+
+    - name: Set up Python
+      run: uv python install 3.11
+
+    - name: Create virtual environment
+      run: uv venv
+
+    - name: Install dependencies
+      run: |
+        uv pip install -e .
+        uv pip install pyinstaller
+
+    - name: Build binary
+      run: python build_binary.py
+
+    - name: Upload binary artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.artifact_name }}
+        path: ${{ matrix.binary_path }}
+
+  create-release:
+    runs-on: ubuntu-latest
+    needs: [test, build-release-docker, build-release-binaries]
+    
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+
+    - name: Generate changelog
+      id: changelog
+      run: |
+        # Get the previous tag
+        PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+        CURRENT_TAG=${GITHUB_REF#refs/tags/}
+        
+        echo "## What's Changed" > changelog.md
+        echo "" >> changelog.md
+        
+        if [ -n "$PREV_TAG" ]; then
+          # Get commits since last tag
+          git log --pretty=format:"- %s (%h)" $PREV_TAG..HEAD >> changelog.md
+        else
+          # First release - get all commits
+          git log --pretty=format:"- %s (%h)" >> changelog.md
+        fi
+        
+        echo "" >> changelog.md
+        echo "## Docker Images" >> changelog.md
+        echo "" >> changelog.md
+        echo "- \`ghcr.io/${{ github.repository }}:${CURRENT_TAG}\`" >> changelog.md
+        echo "- \`ghcr.io/${{ github.repository }}:latest\`" >> changelog.md
+        echo "" >> changelog.md
+        echo "## Installation" >> changelog.md
+        echo "" >> changelog.md
+        echo "### Docker" >> changelog.md
+        echo "\`\`\`bash" >> changelog.md
+        echo "docker pull ghcr.io/${{ github.repository }}:${CURRENT_TAG}" >> changelog.md
+        echo "\`\`\`" >> changelog.md
+        echo "" >> changelog.md
+        echo "### Binary Downloads" >> changelog.md
+        echo "Download the appropriate binary for your platform from the assets below." >> changelog.md
+        
+        # Set output for use in release creation
+        echo "changelog<<EOF" >> $GITHUB_OUTPUT
+        cat changelog.md >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ github.ref_name }}
+        name: Release ${{ github.ref_name }}
+        body: ${{ steps.changelog.outputs.changelog }}
+        draft: false
+        prerelease: ${{ contains(github.ref_name, '-') }}
+        files: |
+          artifacts/media-renamer-linux-amd64/media-renamer
+          artifacts/media-renamer-macos-universal/media-renamer
+          artifacts/media-renamer-windows-amd64.exe/media-renamer.exe
+        token: ${{ secrets.GITHUB_TOKEN }}

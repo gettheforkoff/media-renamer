@@ -1,0 +1,114 @@
+name: Update Changelog
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'media_renamer/**'
+      - 'tests/**'
+      - 'pyproject.toml'
+      - 'README.md'
+      - 'Dockerfile'
+
+jobs:
+  update-changelog:
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[skip changelog]')"
+    
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        fetch-depth: 0
+
+    - name: Get latest release
+      id: latest_release
+      run: |
+        LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+
+    - name: Get commits since last release
+      id: commits
+      run: |
+        if [ -n "${{ steps.latest_release.outputs.latest_tag }}" ]; then
+          COMMITS=$(git log --pretty=format:"- %s (%h)" ${{ steps.latest_release.outputs.latest_tag }}..HEAD --no-merges)
+        else
+          COMMITS=$(git log --pretty=format:"- %s (%h)" --no-merges -10)
+        fi
+        
+        # Create temporary file for multiline output
+        echo "$COMMITS" > commits.txt
+        echo "commits_file=commits.txt" >> $GITHUB_OUTPUT
+
+    - name: Check if changelog needs update
+      id: check_update
+      run: |
+        if [ -s commits.txt ]; then
+          echo "needs_update=true" >> $GITHUB_OUTPUT
+        else
+          echo "needs_update=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Update CHANGELOG.md
+      if: steps.check_update.outputs.needs_update == 'true'
+      run: |
+        # Read current changelog
+        if [ ! -f CHANGELOG.md ]; then
+          echo "# Changelog" > CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "All notable changes to this project will be documented in this file." >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+        fi
+        
+        # Create temporary file with new content
+        {
+          # Keep everything up to "## [Unreleased]"
+          sed '/## \[Unreleased\]/q' CHANGELOG.md
+          
+          echo ""
+          echo "### Added"
+          grep -E "(add|feat|feature)" commits.txt | head -5 || echo "- No new features in this update"
+          echo ""
+          echo "### Changed" 
+          grep -E "(change|update|improve|enhance)" commits.txt | head -5 || echo "- No changes in this update"
+          echo ""
+          echo "### Fixed"
+          grep -E "(fix|bug|resolve)" commits.txt | head -5 || echo "- No fixes in this update"
+          echo ""
+          
+          # Add everything after "## [Unreleased]" section, skipping old unreleased content
+          sed -n '/^## \[.*\].*[0-9]/,$p' CHANGELOG.md
+          
+        } > CHANGELOG_new.md
+        
+        mv CHANGELOG_new.md CHANGELOG.md
+
+    - name: Create Pull Request
+      if: steps.check_update.outputs.needs_update == 'true'
+      uses: peter-evans/create-pull-request@v5
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: "docs: update changelog with recent changes [skip changelog]"
+        title: "Update CHANGELOG.md"
+        body: |
+          ## Automated Changelog Update
+          
+          This PR updates the CHANGELOG.md file with recent commits since the last release.
+          
+          ### Recent Changes:
+          ```
+          $(cat commits.txt)
+          ```
+          
+          The changelog has been automatically categorized into Added, Changed, and Fixed sections.
+          Please review and edit as needed before merging.
+        branch: update-changelog
+        delete-branch: true
+        
+    - name: Clean up
+      run: rm -f commits.txt
