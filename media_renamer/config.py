@@ -1,22 +1,30 @@
-from pydantic import BaseModel
-from typing import Optional
 import os
-from pathlib import Path
+from typing import List, Optional
+
+from pydantic import BaseModel
 
 
 class Config(BaseModel):
     tvdb_api_key: Optional[str] = None
     tmdb_api_key: Optional[str] = None
     imdb_api_key: Optional[str] = None
-    
+
     movie_pattern: str = "{title} ({year})"
     tv_pattern: str = "{title} - S{season:02d}E{episode:02d} - {episode_title}"
-    
+
     dry_run: bool = False
     verbose: bool = False
-    
-    supported_extensions: list[str] = [".mkv", ".mp4", ".avi", ".mov", ".wmv", ".flv", ".webm"]
-    
+
+    supported_extensions: List[str] = [
+        ".mkv",
+        ".mp4",
+        ".avi",
+        ".mov",
+        ".wmv",
+        ".flv",
+        ".webm",
+    ]
+
     @classmethod
     def load_from_env(cls) -> "Config":
         return cls(
