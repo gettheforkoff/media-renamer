@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  renamer:
+    build: .
+    container_name: media-renamer
+    environment:
+      - TMDB_API_KEY=${TMDB_API_KEY}
+      - TVDB_API_KEY=${TVDB_API_KEY}
+      - DRY_RUN=${DRY_RUN:-true}
+      - VERBOSE=${VERBOSE:-false}
+    volumes:
+      - ${MEDIA_PATH:-./media}:/media
+    command: python -m src.cli /media --dry-run --verbose
