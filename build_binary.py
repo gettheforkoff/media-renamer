@@ -33,17 +33,34 @@ def build_binary():
     # Find package data directories
     def find_package_data():
         """Find babelfish and guessit data directories"""
-        import babelfish
-        import guessit
-        
-        babelfish_data = Path(babelfish.__file__).parent / 'data'
-        guessit_data = Path(guessit.__file__).parent / 'data'
+        import sys
+        import importlib.util
         
         datas = []
-        if babelfish_data.exists():
-            datas.append((str(babelfish_data), 'babelfish/data'))
-        if guessit_data.exists():
-            datas.append((str(guessit_data), 'guessit/data'))
+        
+        # Try to find babelfish data
+        try:
+            spec = importlib.util.find_spec('babelfish')
+            if spec and spec.origin:
+                babelfish_path = Path(spec.origin).parent
+                babelfish_data = babelfish_path / 'data'
+                if babelfish_data.exists():
+                    datas.append((str(babelfish_data), 'babelfish/data'))
+                    print(f"Found babelfish data at: {babelfish_data}")
+        except Exception as e:
+            print(f"Warning: Could not find babelfish data: {e}")
+        
+        # Try to find guessit data
+        try:
+            spec = importlib.util.find_spec('guessit')
+            if spec and spec.origin:
+                guessit_path = Path(spec.origin).parent
+                guessit_data = guessit_path / 'data'
+                if guessit_data.exists():
+                    datas.append((str(guessit_data), 'guessit/data'))
+                    print(f"Found guessit data at: {guessit_data}")
+        except Exception as e:
+            print(f"Warning: Could not find guessit data: {e}")
         
         return datas
     
