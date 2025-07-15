@@ -30,62 +30,21 @@ def build_binary():
     project_root = Path(__file__).parent
     os.chdir(project_root)
     
-    # Find package data directories
-    def find_package_data():
-        """Find babelfish and guessit data directories"""
-        import sys
-        import importlib.util
-        
-        datas = []
-        
-        # Try to find babelfish data
-        try:
-            spec = importlib.util.find_spec('babelfish')
-            if spec and spec.origin:
-                babelfish_path = Path(spec.origin).parent
-                babelfish_data = babelfish_path / 'data'
-                if babelfish_data.exists():
-                    datas.append((str(babelfish_data), 'babelfish/data'))
-                    print(f"Found babelfish data at: {babelfish_data}")
-        except Exception as e:
-            print(f"Warning: Could not find babelfish data: {e}")
-        
-        # Try to find guessit data
-        try:
-            spec = importlib.util.find_spec('guessit')
-            if spec and spec.origin:
-                guessit_path = Path(spec.origin).parent
-                guessit_data = guessit_path / 'data'
-                if guessit_data.exists():
-                    datas.append((str(guessit_data), 'guessit/data'))
-                    print(f"Found guessit data at: {guessit_data}")
-        except Exception as e:
-            print(f"Warning: Could not find guessit data: {e}")
-        
-        return datas
-    
-    # Get data files
-    try:
-        data_files = find_package_data()
-        data_str = ',\n        '.join([f"('{src}', '{dst}')" for src, dst in data_files])
-        if data_str:
-            data_str = f"        {data_str},"
-    except Exception as e:
-        print(f"Warning: Could not find package data files: {e}")
-        data_str = ""
-    
-    # Create a temporary spec file for PyInstaller
+    # Create a temporary spec file for PyInstaller with data collection
     spec_content = """# -*- mode: python ; coding: utf-8 -*-
+from PyInstaller.utils.hooks import collect_data_files
 
 block_cipher = None
+
+# Collect data files for packages that need them
+babelfish_datas = collect_data_files('babelfish')
+guessit_datas = collect_data_files('guessit')
 
 a = Analysis(
     ['media_renamer/main.py'],
     pathex=[],
     binaries=[],
-    datas=[
-{data_str}
-    ],
+    datas=babelfish_datas + guessit_datas,
     hiddenimports=[
         'media_renamer.cli',
         'media_renamer.config',
@@ -108,7 +67,7 @@ a = Analysis(
         'dotenv',
     ],
     hookspath=[],
-    hooksconfig={{}},
+    hooksconfig={},
     runtime_hooks=[],
     excludes=[],
     win_no_prefer_redirects=False,
@@ -139,7 +98,7 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
 )
-""".format(data_str=data_str)
+"""
     
     # Write the spec file
     spec_file = project_root / "media_renamer.spec"
