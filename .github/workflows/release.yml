@@ -183,6 +183,15 @@ jobs:
           echo "Contents of $dir:"
           ls -la "$dir"
         done
+    
+    - name: Prepare release assets
+      run: |
+        mkdir -p release-assets
+        cp artifacts/media-renamer-linux-amd64/media-renamer release-assets/media-renamer-linux-amd64
+        cp artifacts/media-renamer-macos-universal/media-renamer release-assets/media-renamer-macos-universal
+        cp artifacts/media-renamer-windows-amd64/media-renamer.exe release-assets/media-renamer-windows-amd64.exe
+        echo "Release assets prepared:"
+        ls -la release-assets/
 
     - name: Generate changelog
       id: changelog
@@ -231,5 +240,5 @@ jobs:
         body: ${{ steps.changelog.outputs.changelog }}
         draft: false
         prerelease: ${{ contains(github.ref_name, '-') }}
-        files: artifacts/*/*
+        files: release-assets/*
         token: ${{ secrets.GITHUB_TOKEN }}
