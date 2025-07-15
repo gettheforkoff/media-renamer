@@ -20,7 +20,6 @@ jobs:
     
     permissions:
       contents: write
-      pull-requests: write
 
     steps:
     - name: Checkout repository
@@ -127,36 +126,18 @@ jobs:
         
         mv CHANGELOG_new.md CHANGELOG.md
 
-    - name: Commit changelog directly (for releases)
-      if: steps.check_update.outputs.needs_update == 'true' && github.event_name == 'release'
+    - name: Commit changelog directly
+      if: steps.check_update.outputs.needs_update == 'true'
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add CHANGELOG.md
-        git commit -m "docs: update changelog for ${{ steps.latest_release.outputs.current_tag }} release [skip changelog]"
+        if [ "${{ github.event_name }}" == "release" ]; then
+          git commit -m "docs: update changelog for ${{ steps.latest_release.outputs.current_tag }} release [skip changelog]"
+        else
+          git commit -m "docs: update changelog with recent changes [skip changelog]"
+        fi
         git push
-
-    - name: Create Pull Request (for regular pushes)
-      if: steps.check_update.outputs.needs_update == 'true' && github.event_name != 'release'
-      uses: peter-evans/create-pull-request@v7
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        commit-message: "docs: update changelog with recent changes [skip changelog]"
-        title: "Update CHANGELOG.md"
-        body: |
-          ## Automated Changelog Update
-          
-          This PR updates the CHANGELOG.md file with recent commits since the last release.
-          
-          ### Recent Changes:
-          ```
-          $(cat commits.txt)
-          ```
-          
-          The changelog has been automatically categorized into Added, Changed, and Fixed sections.
-          Please review and edit as needed before merging.
-        branch: update-changelog
-        delete-branch: true
         
     - name: Clean up
       run: rm -f commits.txt
