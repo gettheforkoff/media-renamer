@@ -155,7 +155,8 @@ jobs:
 
   create-release:
     runs-on: ubuntu-latest
-    needs: [test, build-release-docker, build-release-binaries]
+    needs: [test, build-release-docker]
+    if: always() && needs.test.result == 'success' && needs.build-release-docker.result == 'success'
     
     permissions:
       contents: write
@@ -187,9 +188,29 @@ jobs:
     - name: Prepare release assets
       run: |
         mkdir -p release-assets
-        cp artifacts/media-renamer-linux-amd64/media-renamer release-assets/media-renamer-linux-amd64
-        cp artifacts/media-renamer-macos-universal/media-renamer release-assets/media-renamer-macos-universal
-        cp artifacts/media-renamer-windows-amd64/media-renamer.exe release-assets/media-renamer-windows-amd64.exe
+        
+        # Copy artifacts that exist, skip if they don't exist
+        if [ -f artifacts/media-renamer-linux-amd64/media-renamer ]; then
+          cp artifacts/media-renamer-linux-amd64/media-renamer release-assets/media-renamer-linux-amd64
+          echo "✅ Linux binary added"
+        else
+          echo "❌ Linux binary not found"
+        fi
+        
+        if [ -f artifacts/media-renamer-macos-universal/media-renamer ]; then
+          cp artifacts/media-renamer-macos-universal/media-renamer release-assets/media-renamer-macos-universal
+          echo "✅ macOS binary added"
+        else
+          echo "❌ macOS binary not found"
+        fi
+        
+        if [ -f artifacts/media-renamer-windows-amd64/media-renamer.exe ]; then
+          cp artifacts/media-renamer-windows-amd64/media-renamer.exe release-assets/media-renamer-windows-amd64.exe
+          echo "✅ Windows binary added"
+        else
+          echo "❌ Windows binary not found"
+        fi
+        
         echo "Release assets prepared:"
         ls -la release-assets/
 
