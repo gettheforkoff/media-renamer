@@ -145,7 +145,7 @@ jobs:
         uv pip install pyinstaller
 
     - name: Build binary
-      run: python build_binary.py
+      run: uv run python build_binary.py
 
     - name: Upload binary artifact
       uses: actions/upload-artifact@v4
