@@ -167,10 +167,11 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Download all artifacts
+    - name: Download binary artifacts
       uses: actions/download-artifact@v4
       with:
         path: artifacts
+        pattern: media-renamer-*
 
     - name: Debug artifact structure
       run: |
