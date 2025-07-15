@@ -171,6 +171,13 @@ jobs:
       with:
         path: artifacts
 
+    - name: Debug artifact structure
+      run: |
+        echo "Artifact directory structure:"
+        find artifacts -type f -ls
+        echo "Files found:"
+        find artifacts -name "media-renamer*" -type f
+
     - name: Generate changelog
       id: changelog
       run: |
@@ -219,7 +226,7 @@ jobs:
         draft: false
         prerelease: ${{ contains(github.ref_name, '-') }}
         files: |
-          artifacts/media-renamer-linux-amd64/media-renamer
-          artifacts/media-renamer-macos-universal/media-renamer
-          artifacts/media-renamer-windows-amd64/media-renamer.exe
+          artifacts/media-renamer-linux-amd64/*
+          artifacts/media-renamer-macos-universal/*
+          artifacts/media-renamer-windows-amd64/*
         token: ${{ secrets.GITHUB_TOKEN }}
