@@ -10,6 +10,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [v1.1.2] - 2025-07-15
 
 ### Added
+- fix: add all babelfish converter modules to PyInstaller hidden imports (929d2da)
+
+### Changed
+- docs: update changelog for v1.1.2 release [skip changelog] (8751d34)
+- fix: improve package data detection for PyInstaller (16029ca)
+- docs: update changelog for v1.1.1 release [skip changelog] (250e235)
+
+### Fixed
+- fix: add all babelfish converter modules to PyInstaller hidden imports (929d2da)
+- fix: use PyInstaller collect_data_files for robust data collection (6ce3a09)
+- fix: improve package data detection for PyInstaller (16029ca)
+- fix: include babelfish data files in PyInstaller binary build (a6125cd)
+
+## [v1.1.2] - 2025-07-15
+
+### Added
 
 ### Changed
 - fix: improve package data detection for PyInstaller (16029ca)
