@@ -2,7 +2,7 @@ import re
 from pathlib import Path
 from typing import Optional
 
-import guessit  # type: ignore
+import guessit
 from pymediainfo import MediaInfo as PyMediaInfo
 
 from media_renamer.models import MediaInfo, MediaType
