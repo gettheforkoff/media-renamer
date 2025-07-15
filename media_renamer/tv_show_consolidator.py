@@ -46,12 +46,13 @@ class TVShowConsolidator:
             tmdb_key=config.tmdb_api_key, tvdb_key=config.tvdb_api_key
         )
 
-        # Season detection patterns
+        # Season detection patterns - avoid matching years
         self.season_patterns = [
             r"[Ss]eason\s*(\d+)",
             r"[Ss](\d+)",
             r"Season\s*(\d+)",
-            r"^(\d+)$",  # Just a number
+            # Only match 1-2 digit numbers to avoid years
+            r"^(\d{1,2})$",  # Just a 1-2 digit number (seasons 1-99)
         ]
 
         # Year to season mapping patterns for shows that use years
@@ -359,7 +360,8 @@ class TVShowConsolidator:
 
         # Process each directory in the group
         for tv_dir in group.directories:
-            season_num = tv_dir.season or self._map_year_to_season(tv_dir.year, group)
+            # For year-based shows, prioritize year-to-season mapping over detected season
+            season_num = self._map_year_to_season(tv_dir.year, group) or tv_dir.season
 
             if season_num:
                 season_dir = unified_path / f"Season {season_num:02d}"
@@ -403,10 +405,10 @@ class TVShowConsolidator:
         }
 
     def _generate_unified_directory_name(self, group: TVShowGroup) -> str:
-        """Generate unified directory name with TVDB ID"""
+        """Generate unified directory name with TVDB ID in Sonarr format"""
         title = self._sanitize_directory_name(group.show_title)
         year = f" ({group.year})" if group.year else ""
-        tvdb_id = f" [tvdb-{group.tvdb_id}]" if group.tvdb_id else ""
+        tvdb_id = f" [tvdbid-{group.tvdb_id}]" if group.tvdb_id else ""
 
         return f"{title}{year}{tvdb_id}"
 

@@ -19,7 +19,7 @@ class TestConfig:
         assert config.movie_pattern == "{title} ({year})"
         assert (
             config.tv_pattern
-            == "{title} - S{season:02d}E{episode:02d} - {episode_title}"
+            == "{title} ({year}) - S{season:02d}E{episode:02d} - {episode_title}"
         )
         assert config.dry_run is False
         assert config.verbose is False
@@ -114,7 +114,7 @@ class TestConfig:
         assert config.movie_pattern == "{title} ({year})"
         assert (
             config.tv_pattern
-            == "{title} - S{season:02d}E{episode:02d} - {episode_title}"
+            == "{title} ({year}) - S{season:02d}E{episode:02d} - {episode_title}"
         )
 
     @patch.dict(
@@ -232,9 +232,9 @@ class TestConfig:
 
         # Test TV pattern
         tv_formatted = config.tv_pattern.format(
-            title="Test Show", season=1, episode=5, episode_title="Test Episode"
+            title="Test Show", year=2020, season=1, episode=5, episode_title="Test Episode"
         )
-        assert tv_formatted == "Test Show - S01E05 - Test Episode"
+        assert tv_formatted == "Test Show (2020) - S01E05 - Test Episode"
 
     def test_config_equality(self):
         """Test config equality comparison"""

@@ -500,9 +500,10 @@ class TestAPIClientManager:
 
     def test_enhance_info_fallback_order(self, temp_dir):
         """Test fallback order for API clients"""
-        with patch("media_renamer.api_clients.TMDBClient") as mock_tmdb_class, patch(
-            "media_renamer.api_clients.TVDBClient"
-        ) as mock_tvdb_class:
+        with (
+            patch("media_renamer.api_clients.TMDBClient") as mock_tmdb_class,
+            patch("media_renamer.api_clients.TVDBClient") as mock_tvdb_class,
+        ):
             # TMDB fails, TVDB succeeds
             mock_tmdb = Mock()
             mock_tmdb.search_movie.return_value = None

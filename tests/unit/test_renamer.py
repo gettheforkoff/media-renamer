@@ -404,11 +404,12 @@ class TestFileRenamer:
         for file_path in files:
             file_path.touch()
 
-        with patch(
-            "media_renamer.metadata_extractor.MetadataExtractor"
-        ) as mock_extractor, patch(
-            "media_renamer.api_clients.APIClientManager"
-        ) as mock_api_manager:
+        with (
+            patch(
+                "media_renamer.metadata_extractor.MetadataExtractor"
+            ) as mock_extractor,
+            patch("media_renamer.api_clients.APIClientManager") as mock_api_manager,
+        ):
             mock_extractor_instance = Mock()
             mock_extractor.return_value = mock_extractor_instance
 
@@ -445,11 +446,12 @@ class TestFileRenamer:
         movie_file = temp_dir / "Movie.2020.mkv"
         movie_file.touch()
 
-        with patch(
-            "media_renamer.metadata_extractor.MetadataExtractor"
-        ) as mock_extractor, patch(
-            "media_renamer.api_clients.APIClientManager"
-        ) as mock_api_manager:
+        with (
+            patch(
+                "media_renamer.metadata_extractor.MetadataExtractor"
+            ) as mock_extractor,
+            patch("media_renamer.api_clients.APIClientManager") as mock_api_manager,
+        ):
             mock_extractor_instance = Mock()
             mock_extractor.return_value = mock_extractor_instance
 
@@ -493,11 +495,12 @@ class TestFileRenamer:
         for filename in files:
             (temp_dir / filename).touch()
 
-        with patch(
-            "media_renamer.metadata_extractor.MetadataExtractor"
-        ) as mock_extractor, patch(
-            "media_renamer.api_clients.APIClientManager"
-        ) as mock_api_manager:
+        with (
+            patch(
+                "media_renamer.metadata_extractor.MetadataExtractor"
+            ) as mock_extractor,
+            patch("media_renamer.api_clients.APIClientManager") as mock_api_manager,
+        ):
             mock_extractor_instance = Mock()
             mock_extractor.return_value = mock_extractor_instance
 
@@ -547,7 +550,6 @@ class TestFileRenamer:
     def test_file_permissions_preserved_during_rename(self, sample_config, temp_dir):
         """Test that file permissions and ownership are preserved during renaming"""
         import os
-        import stat
 
         # Create a test file
         original_path = temp_dir / "test_movie.mkv"
@@ -584,6 +586,8 @@ class TestFileRenamer:
         new_gid = new_stat.st_gid
 
         # Verify permissions and ownership are preserved
-        assert new_mode == original_mode, f"Permissions changed: {oct(original_mode)} -> {oct(new_mode)}"
+        assert (
+            new_mode == original_mode
+        ), f"Permissions changed: {oct(original_mode)} -> {oct(new_mode)}"
         assert new_uid == original_uid, f"UID changed: {original_uid} -> {new_uid}"
         assert new_gid == original_gid, f"GID changed: {original_gid} -> {new_gid}"

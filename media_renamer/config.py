@@ -10,7 +10,7 @@ class Config(BaseModel):
     imdb_api_key: Optional[str] = None
 
     movie_pattern: str = "{title} ({year})"
-    tv_pattern: str = "{title} - S{season:02d}E{episode:02d} - {episode_title}"
+    tv_pattern: str = "{title} ({year}) - S{season:02d}E{episode:02d} - {episode_title}"
 
     dry_run: bool = False
     verbose: bool = False
