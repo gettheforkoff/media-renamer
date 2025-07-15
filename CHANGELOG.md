@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v1.2.0] - 2025-07-15
+
+### Added
+- fix: address linting, formatting, and type checking issues (e286954)
+- feat: add TV show consolidation for multiple directories (f1214ab)
+
+### Changed
+- fix: resolve changelog update race condition in release workflow (8ced187)
+- docs: update changelog for v1.1.2 release [skip changelog] (82229be)
+
+### Fixed
+- fix: resolve changelog update race condition in release workflow (8ced187)
+- fix: ensure consistent test behavior across local and CI environments (9163539)
+- fix: address linting, formatting, and type checking issues (e286954)
+
 ## [v1.1.2] - 2025-07-15
 
 ### Added
