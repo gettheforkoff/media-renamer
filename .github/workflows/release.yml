@@ -177,6 +177,12 @@ jobs:
         find artifacts -type f -ls
         echo "Files found:"
         find artifacts -name "media-renamer*" -type f
+        echo "Detailed listing:"
+        ls -la artifacts/
+        for dir in artifacts/*/; do
+          echo "Contents of $dir:"
+          ls -la "$dir"
+        done
 
     - name: Generate changelog
       id: changelog
@@ -225,8 +231,5 @@ jobs:
         body: ${{ steps.changelog.outputs.changelog }}
         draft: false
         prerelease: ${{ contains(github.ref_name, '-') }}
-        files: |
-          artifacts/media-renamer-linux-amd64/media-renamer
-          artifacts/media-renamer-macos-universal/media-renamer
-          artifacts/media-renamer-windows-amd64/media-renamer.exe
+        files: artifacts/*/*
         token: ${{ secrets.GITHUB_TOKEN }}
