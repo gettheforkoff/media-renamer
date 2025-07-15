@@ -2,18 +2,21 @@ name: Update Changelog
 
 on:
   push:
-    branches: [main]
+    branches: 
+      - main
     paths:
       - 'media_renamer/**'
       - 'tests/**'
       - 'pyproject.toml'
       - 'README.md'
       - 'Dockerfile'
+  release:
+    types: [published]
 
 jobs:
   update-changelog:
     runs-on: ubuntu-latest
-    if: "!contains(github.event.head_commit.message, '[skip changelog]')"
+    if: "github.event_name == 'release' || !contains(github.event.head_commit.message, '[skip changelog]')"
     
     permissions:
       contents: write
@@ -29,16 +32,35 @@ jobs:
     - name: Get latest release
       id: latest_release
       run: |
-        LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        if [ "${{ github.event_name }}" == "release" ]; then
+          # For release events, get the previous tag
+          LATEST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          CURRENT_TAG="${{ github.event.release.tag_name }}"
+        else
+          # For push events, get the latest tag
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          CURRENT_TAG=""
+        fi
         echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+        echo "current_tag=$CURRENT_TAG" >> $GITHUB_OUTPUT
 
     - name: Get commits since last release
       id: commits
       run: |
-        if [ -n "${{ steps.latest_release.outputs.latest_tag }}" ]; then
-          COMMITS=$(git log --pretty=format:"- %s (%h)" ${{ steps.latest_release.outputs.latest_tag }}..HEAD --no-merges)
+        if [ "${{ github.event_name }}" == "release" ]; then
+          # For release events, get commits between previous tag and current tag
+          if [ -n "${{ steps.latest_release.outputs.latest_tag }}" ]; then
+            COMMITS=$(git log --pretty=format:"- %s (%h)" ${{ steps.latest_release.outputs.latest_tag }}..${{ steps.latest_release.outputs.current_tag }} --no-merges)
+          else
+            COMMITS=$(git log --pretty=format:"- %s (%h)" ${{ steps.latest_release.outputs.current_tag }} --no-merges)
+          fi
         else
-          COMMITS=$(git log --pretty=format:"- %s (%h)" --no-merges -10)
+          # For push events, get commits since last tag
+          if [ -n "${{ steps.latest_release.outputs.latest_tag }}" ]; then
+            COMMITS=$(git log --pretty=format:"- %s (%h)" ${{ steps.latest_release.outputs.latest_tag }}..HEAD --no-merges)
+          else
+            COMMITS=$(git log --pretty=format:"- %s (%h)" --no-merges -10)
+          fi
         fi
         
         # Create temporary file for multiline output
@@ -70,15 +92,32 @@ jobs:
           # Keep everything up to "## [Unreleased]"
           sed '/## \[Unreleased\]/q' CHANGELOG.md
           
-          echo ""
-          echo "### Added"
-          grep -E "(add|feat|feature)" commits.txt | head -5 || echo "- No new features in this update"
-          echo ""
-          echo "### Changed" 
-          grep -E "(change|update|improve|enhance)" commits.txt | head -5 || echo "- No changes in this update"
-          echo ""
-          echo "### Fixed"
-          grep -E "(fix|bug|resolve)" commits.txt | head -5 || echo "- No fixes in this update"
+          if [ "${{ github.event_name }}" == "release" ]; then
+            # For releases, create a versioned entry
+            echo ""
+            echo "## [${{ steps.latest_release.outputs.current_tag }}] - $(date +%Y-%m-%d)"
+            echo ""
+            echo "### Added"
+            grep -E "(add|feat|feature)" commits.txt | head -5 || echo "- No new features in this release"
+            echo ""
+            echo "### Changed" 
+            grep -E "(change|update|improve|enhance)" commits.txt | head -5 || echo "- No changes in this release"
+            echo ""
+            echo "### Fixed"
+            grep -E "(fix|bug|resolve)" commits.txt | head -5 || echo "- No fixes in this release"
+          else
+            # For regular pushes, update unreleased section
+            echo ""
+            echo "### Added"
+            grep -E "(add|feat|feature)" commits.txt | head -5 || echo "- No new features in this update"
+            echo ""
+            echo "### Changed" 
+            grep -E "(change|update|improve|enhance)" commits.txt | head -5 || echo "- No changes in this update"
+            echo ""
+            echo "### Fixed"
+            grep -E "(fix|bug|resolve)" commits.txt | head -5 || echo "- No fixes in this update"
+          fi
+          
           echo ""
           
           # Add everything after "## [Unreleased]" section, skipping old unreleased content
@@ -88,8 +127,17 @@ jobs:
         
         mv CHANGELOG_new.md CHANGELOG.md
 
-    - name: Create Pull Request
-      if: steps.check_update.outputs.needs_update == 'true'
+    - name: Commit changelog directly (for releases)
+      if: steps.check_update.outputs.needs_update == 'true' && github.event_name == 'release'
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add CHANGELOG.md
+        git commit -m "docs: update changelog for ${{ steps.latest_release.outputs.current_tag }} release [skip changelog]"
+        git push
+
+    - name: Create Pull Request (for regular pushes)
+      if: steps.check_update.outputs.needs_update == 'true' && github.event_name != 'release'
       uses: peter-evans/create-pull-request@v7
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
