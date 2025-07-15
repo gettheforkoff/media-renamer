@@ -163,7 +163,7 @@ class TestCLI:
         test_file.touch()
 
         with patch("media_renamer.cli.FileRenamer") as mock_renamer_class, patch.dict(
-            os.environ, {"TMDB_API_KEY": "", "TVDB_API_KEY": ""}, clear=False
+            os.environ, {"TMDB_API_KEY": "", "TVDB_API_KEY": "", "DRY_RUN": "false"}, clear=False
         ):
             mock_renamer = Mock()
             mock_renamer_class.return_value = mock_renamer
@@ -180,7 +180,7 @@ class TestCLI:
         test_file.touch()
 
         with patch("media_renamer.cli.FileRenamer") as mock_renamer_class, patch.dict(
-            os.environ, {"TMDB_API_KEY": "env_tmdb_key", "TVDB_API_KEY": "env_tvdb_key"}
+            os.environ, {"TMDB_API_KEY": "env_tmdb_key", "TVDB_API_KEY": "env_tvdb_key", "DRY_RUN": "false"}
         ):
             mock_renamer = Mock()
             mock_renamer_class.return_value = mock_renamer
@@ -239,7 +239,9 @@ class TestCLI:
         test_file = temp_dir / "Movie.2020.mkv"
         test_file.touch()
 
-        with patch("media_renamer.cli.FileRenamer") as mock_renamer_class:
+        with patch("media_renamer.cli.FileRenamer") as mock_renamer_class, patch.dict(
+            os.environ, {"DRY_RUN": "false"}, clear=False
+        ):
             mock_renamer = Mock()
             mock_renamer_class.return_value = mock_renamer
 
@@ -258,7 +260,7 @@ class TestCLI:
 
             assert result.exit_code == 0
             assert "✓" in result.output  # Success indicator
-            assert "Would rename 1 files successfully" in result.output
+            assert "Renamed 1 files successfully" in result.output
 
     def test_main_with_failed_results(self, temp_dir):
         """Test main CLI function with failed rename results"""
@@ -294,7 +296,9 @@ class TestCLI:
         test_file1.touch()
         test_file2.touch()
 
-        with patch("media_renamer.cli.FileRenamer") as mock_renamer_class:
+        with patch("media_renamer.cli.FileRenamer") as mock_renamer_class, patch.dict(
+            os.environ, {"DRY_RUN": "false"}, clear=False
+        ):
             mock_renamer = Mock()
             mock_renamer_class.return_value = mock_renamer
 
@@ -320,8 +324,41 @@ class TestCLI:
             assert result.exit_code == 0
             assert "✓" in result.output  # Success indicator
             assert "✗" in result.output  # Failure indicator
-            assert "Would rename 1 files successfully" in result.output
+            assert "Renamed 1 files successfully" in result.output
             assert "Failed to rename 1 files" in result.output
+
+    def test_main_with_dry_run_flag(self, temp_dir):
+        """Test main CLI function with explicit --dry-run flag"""
+        test_file = temp_dir / "Movie.2020.mkv"
+        test_file.touch()
+
+        with patch("media_renamer.cli.FileRenamer") as mock_renamer_class, patch.dict(
+            os.environ, {"DRY_RUN": "false"}, clear=False
+        ):
+            mock_renamer = Mock()
+            mock_renamer_class.return_value = mock_renamer
+
+            # Mock successful results
+            mock_results = [
+                RenameResult(
+                    original_path=test_file,
+                    new_path=temp_dir / "Movie (2020).mkv",
+                    success=True,
+                    error=None,
+                )
+            ]
+            mock_renamer.process_directory.return_value = mock_results
+
+            result = self.runner.invoke(main, [str(temp_dir), "--dry-run"])
+
+            assert result.exit_code == 0
+            assert "✓" in result.output  # Success indicator
+            assert "Would rename 1 files successfully" in result.output
+            
+            # Check that dry_run was set correctly
+            args, kwargs = mock_renamer_class.call_args
+            config = args[0]
+            assert config.dry_run is True
 
     def test_display_results_with_successful_results(self, temp_dir):
         """Test display_results function with successful results"""
