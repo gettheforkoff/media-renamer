@@ -21,7 +21,7 @@ jobs:
         version: "latest"
 
     - name: Set up Python
-      run: uv python install 3.11
+      run: uv python install 3.13
 
     - name: Install system dependencies
       run: |
@@ -134,7 +134,7 @@ jobs:
         choco install mediainfo
 
     - name: Set up Python
-      run: uv python install 3.11
+      run: uv python install 3.13
 
     - name: Create virtual environment
       run: uv venv

@@ -23,6 +23,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Multimedia :: Video",
     "Topic :: System :: Filesystems",
     "Topic :: Utilities",
@@ -36,6 +37,7 @@ dependencies = [
     "pydantic>=2.0.0",
     "python-dateutil>=2.8.0",
     "rich>=13.0.0",
+    "setuptools>=65.0.0",
 ]
 
 [project.urls]
@@ -67,10 +69,10 @@ include = [
 
 [tool.black]
 line-length = 88
-target-version = ['py38']
+target-version = ['py310']
 
 [tool.ruff]
-target-version = "py38"
+target-version = "py310"
 line-length = 88
 
 [tool.ruff.lint]
@@ -87,13 +89,17 @@ ignore = [
     "E501",  # line too long, handled by black
     "B008",  # do not perform function calls in argument defaults
     "C901",  # too complex
+    "UP006", # Use dict instead of Dict (keep for Python 3.8/3.9 compatibility)
+    "UP007", # Use X | Y instead of Union (keep for Python 3.8/3.9 compatibility)  
+    "UP035", # Use dict/list instead of typing.Dict/List (keep for compatibility)
+    "UP045", # Use X | None instead of Optional (keep for Python 3.8/3.9 compatibility)
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.10"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
@@ -106,6 +112,13 @@ warn_unused_ignores = true
 warn_no_return = true
 warn_unreachable = true
 strict_equality = true
+
+[[tool.mypy.overrides]]
+module = [
+    "pymediainfo",
+    "guessit",
+]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
