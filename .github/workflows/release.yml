@@ -269,6 +269,66 @@ jobs:
         cat changelog.md >> $GITHUB_OUTPUT
         echo "EOF" >> $GITHUB_OUTPUT
 
+    - name: Update CHANGELOG.md
+      run: |
+        # Read current changelog
+        if [ ! -f CHANGELOG.md ]; then
+          echo "# Changelog" > CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "All notable changes to this project will be documented in this file." >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "## [Unreleased]" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+        fi
+        
+        # Get commits for this release
+        PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+        CURRENT_TAG=${GITHUB_REF#refs/tags/}
+        
+        if [ -n "$PREV_TAG" ]; then
+          COMMITS=$(git log --pretty=format:"- %s (%h)" $PREV_TAG..HEAD --no-merges)
+        else
+          COMMITS=$(git log --pretty=format:"- %s (%h)" --no-merges)
+        fi
+        
+        # Create temporary file for commits
+        echo "$COMMITS" > commits.txt
+        
+        # Create temporary file with new content
+        {
+          # Keep everything up to "## [Unreleased]"
+          sed '/## \[Unreleased\]/q' CHANGELOG.md
+          
+          # Add new release section
+          echo ""
+          echo "## [$CURRENT_TAG] - $(date +%Y-%m-%d)"
+          echo ""
+          echo "### Added"
+          grep -E "(add|feat|feature)" commits.txt | head -5 || echo "- No new features in this release"
+          echo ""
+          echo "### Changed" 
+          grep -E "(change|update|improve|enhance)" commits.txt | head -5 || echo "- No changes in this release"
+          echo ""
+          echo "### Fixed"
+          grep -E "(fix|bug|resolve)" commits.txt | head -5 || echo "- No fixes in this release"
+          echo ""
+          
+          # Add everything after "## [Unreleased]" section, skipping old unreleased content
+          sed -n '/^## \[.*\].*[0-9]/,$p' CHANGELOG.md
+          
+        } > CHANGELOG_new.md
+        
+        mv CHANGELOG_new.md CHANGELOG.md
+        rm -f commits.txt
+
+    - name: Commit changelog update
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add CHANGELOG.md
+        git commit -m "docs: update changelog for ${{ github.ref_name }} release [skip changelog]"
+        git push
+
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
       with:

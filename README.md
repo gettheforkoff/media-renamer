@@ -244,21 +244,66 @@ Dockerfile             # Docker image definition
 
 ### Release Process
 
-Releases are automated through GitHub Actions:
+Releases are fully automated through GitHub Actions. The process is triggered by creating and pushing a version tag:
 
-1. **Automatic Release**: Push a version tag
+#### Creating a Release
+
+1. **For Maintainers**: Create and push a version tag
    ```bash
    git tag v1.2.3
    git push origin v1.2.3
    ```
 
-2. **Manual Release**: Use the "Manual Release" workflow in GitHub Actions
+2. **Alternative**: Use the "Manual Release" workflow dispatch in GitHub Actions UI
 
-Both methods will:
-- Run full test suite
-- Build multi-platform Docker images and push to GHCR
-- Build binaries for Linux, macOS, and Windows
-- Create GitHub release with changelog and assets
+#### What Happens During Release
+
+The release workflow automatically:
+
+1. **✅ Quality Checks**: Runs full test suite across Python 3.8-3.13
+2. **🐳 Docker Images**: Builds and pushes multi-platform images to GHCR
+   - `ghcr.io/gettheforkoff/media-renamer:latest`
+   - `ghcr.io/gettheforkoff/media-renamer:v1.2.3`
+   - `ghcr.io/gettheforkoff/media-renamer:v1.2`
+   - `ghcr.io/gettheforkoff/media-renamer:v1`
+
+3. **📦 Binary Builds**: Creates standalone executables for:
+   - Linux (x64)
+   - macOS (Universal)
+   - Windows (x64)
+
+4. **📋 Changelog**: Automatically updates `CHANGELOG.md` with:
+   - Categorized commits (Added/Changed/Fixed)
+   - Proper version section with date
+   - Commit links and references
+
+5. **🚀 GitHub Release**: Creates release with:
+   - Downloadable binary assets
+   - Docker installation instructions
+   - Auto-generated changelog
+   - Semantic version tagging
+
+#### Release Requirements
+
+- All CI checks must pass
+- Version tags must follow semantic versioning (`v1.2.3`)
+- Only maintainers can create releases
+- Releases are immutable once created
+
+#### Docker Images
+
+After each release, Docker images are available at:
+```bash
+# Latest release
+docker pull ghcr.io/gettheforkoff/media-renamer:latest
+
+# Specific version
+docker pull ghcr.io/gettheforkoff/media-renamer:v1.1.0
+```
+
+#### Binary Downloads
+
+Pre-built binaries are available on the [releases page](https://github.com/gettheforkoff/media-renamer/releases) for immediate download without requiring Python installation.
 
 ## License
 

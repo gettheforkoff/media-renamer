@@ -101,9 +101,33 @@ docker-compose up --build             # Full stack with docker-compose
 - Tags: `latest`, `main-<sha>`, version tags (`v1.2.3`, `v1.2`, `v1`)
 
 ### Release Process
-1. **Automatic**: Push version tag (`git tag v1.2.3 && git push origin v1.2.3`)
-2. **Manual**: Use "Manual Release" workflow dispatch with version input
-3. Both create GitHub releases with binaries for Linux, macOS, Windows
+
+**Automated Release Process** (Recommended):
+1. **Tag Creation**: `git tag v1.2.3 && git push origin v1.2.3`
+2. **Automatic Workflow**: Tag push triggers release workflow which:
+   - Runs full test suite across Python 3.8-3.13
+   - Builds and pushes multi-platform Docker images to GHCR
+   - Builds binaries for Linux, macOS, and Windows
+   - Updates CHANGELOG.md with categorized commits
+   - Creates GitHub release with assets and changelog
+
+**Manual Release Process**:
+1. Use "Manual Release" workflow dispatch in GitHub Actions
+2. Input version number (e.g., v1.2.3)
+3. Same automated process as above
+
+**Release Workflow Details**:
+- **Triggers**: Push tags matching `v*` pattern
+- **Dependencies**: All tests must pass before release creation
+- **Artifacts**: Creates downloadable binaries and Docker images
+- **Changelog**: Automatically categorizes commits into Added/Changed/Fixed sections
+- **GitHub Release**: Creates release with proper versioning and assets
+
+**Important Notes**:
+- Version tags must follow semantic versioning (v1.2.3)
+- All CI checks must pass before release is created
+- Docker images are published to ghcr.io/gettheforkoff/media-renamer
+- Changelog is automatically updated and committed to main branch
 
 ### Binary Artifacts
 - Cross-platform builds using PyInstaller
