@@ -38,6 +38,27 @@ pip install -e .
 
 ### Binary Installation
 
+#### Download Pre-built Binaries
+
+Download the latest pre-built binaries from the [releases page](https://github.com/gettheforkoff/media-renamer/releases):
+
+```bash
+# Linux (x64)
+wget https://github.com/gettheforkoff/media-renamer/releases/latest/download/media-renamer-linux-amd64
+chmod +x media-renamer-linux-amd64
+./media-renamer-linux-amd64 --help
+
+# macOS (Universal)
+wget https://github.com/gettheforkoff/media-renamer/releases/latest/download/media-renamer-macos-universal
+chmod +x media-renamer-macos-universal
+./media-renamer-macos-universal --help
+
+# Windows (x64)
+# Download from: https://github.com/gettheforkoff/media-renamer/releases/latest/download/media-renamer-windows-amd64.exe
+```
+
+#### Build from Source
+
 Build a standalone binary that doesn't require Python:
 
 ```bash
@@ -107,8 +128,11 @@ media-renamer /path/to/media/files --movie-pattern "{title} [{year}]" --tv-patte
 # Using docker-compose
 docker-compose up
 
-# Using GitHub Container Registry image
-docker run -v /path/to/media:/media -e TMDB_API_KEY=your_key ghcr.io/yourusername/media-renamer:latest
+# Using GitHub Container Registry image (recommended)
+docker run -v /path/to/media:/media -e TMDB_API_KEY=your_key -e TVDB_API_KEY=your_key ghcr.io/gettheforkoff/media-renamer:latest
+
+# Using specific version
+docker run -v /path/to/media:/media -e TMDB_API_KEY=your_key -e TVDB_API_KEY=your_key ghcr.io/gettheforkoff/media-renamer:v1.1.0
 
 # Using docker directly (local build)
 docker run -v /path/to/media:/media -e TMDB_API_KEY=your_key media-renamer
