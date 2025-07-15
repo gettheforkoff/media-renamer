@@ -30,9 +30,35 @@ def build_binary():
     project_root = Path(__file__).parent
     os.chdir(project_root)
     
+    # Find package data directories
+    def find_package_data():
+        """Find babelfish and guessit data directories"""
+        import babelfish
+        import guessit
+        
+        babelfish_data = Path(babelfish.__file__).parent / 'data'
+        guessit_data = Path(guessit.__file__).parent / 'data'
+        
+        datas = []
+        if babelfish_data.exists():
+            datas.append((str(babelfish_data), 'babelfish/data'))
+        if guessit_data.exists():
+            datas.append((str(guessit_data), 'guessit/data'))
+        
+        return datas
+    
+    # Get data files
+    try:
+        data_files = find_package_data()
+        data_str = ',\n        '.join([f"('{src}', '{dst}')" for src, dst in data_files])
+        if data_str:
+            data_str = f"        {data_str},"
+    except Exception as e:
+        print(f"Warning: Could not find package data files: {e}")
+        data_str = ""
+    
     # Create a temporary spec file for PyInstaller
-    spec_content = """
-# -*- mode: python ; coding: utf-8 -*-
+    spec_content = """# -*- mode: python ; coding: utf-8 -*-
 
 block_cipher = None
 
@@ -40,7 +66,9 @@ a = Analysis(
     ['media_renamer/main.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[
+{data_str}
+    ],
     hiddenimports=[
         'media_renamer.cli',
         'media_renamer.config',
@@ -49,16 +77,21 @@ a = Analysis(
         'media_renamer.api_clients',
         'media_renamer.renamer',
         'guessit',
+        'guessit.rules',
+        'guessit.rules.properties',
+        'babelfish',
+        'babelfish.country',
+        'babelfish.language',
         'pymediainfo',
         'requests',
         'click',
         'rich',
         'pydantic',
-        'python_dateutil',
+        'dateutil',
         'dotenv',
     ],
     hookspath=[],
-    hooksconfig={},
+    hooksconfig={{}},
     runtime_hooks=[],
     excludes=[],
     win_no_prefer_redirects=False,
@@ -89,7 +122,7 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
 )
-"""
+""".format(data_str=data_str)
     
     # Write the spec file
     spec_file = project_root / "media_renamer.spec"
