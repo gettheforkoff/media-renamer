@@ -120,7 +120,7 @@ jobs:
             artifact_name: media-renamer-macos
             binary_path: dist/media-renamer
           - os: windows-latest
-            artifact_name: media-renamer-windows.exe
+            artifact_name: media-renamer-windows
             binary_path: dist/media-renamer.exe
 
     steps:

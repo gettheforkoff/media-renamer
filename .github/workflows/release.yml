@@ -106,7 +106,7 @@ jobs:
             artifact_name: media-renamer-macos-universal
             binary_path: dist/media-renamer
           - os: windows-latest
-            artifact_name: media-renamer-windows-amd64.exe
+            artifact_name: media-renamer-windows-amd64
             binary_path: dist/media-renamer.exe
 
     steps:
@@ -221,5 +221,5 @@ jobs:
         files: |
           artifacts/media-renamer-linux-amd64/media-renamer
           artifacts/media-renamer-macos-universal/media-renamer
-          artifacts/media-renamer-windows-amd64.exe/media-renamer.exe
+          artifacts/media-renamer-windows-amd64/media-renamer.exe
         token: ${{ secrets.GITHUB_TOKEN }}
