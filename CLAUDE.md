@@ -90,9 +90,8 @@ docker-compose up --build             # Full stack with docker-compose
 
 ### Workflows
 - **CI (`ci.yml`)**: Runs on push/PR - tests, linting, Docker builds, binary artifacts
-- **Release (`release.yml`)**: Triggered by version tags - full release with Docker images and binaries
+- **Release (`release.yml`)**: Triggered by version tags - full release with Docker images, binaries, and changelog updates
 - **Manual Release (`manual-release.yml`)**: Workflow dispatch for manual releases with version input
-- **Changelog (`changelog.yml`)**: Auto-updates CHANGELOG.md on main branch changes
 - **Security (`security.yml`)**: Dependency scanning with Safety, Bandit, and Trivy
 
 ### Docker Registry

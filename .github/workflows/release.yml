@@ -325,9 +325,12 @@ jobs:
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
+        
+        # Switch to main branch to commit changelog
+        git checkout main
         git add CHANGELOG.md
         git commit -m "docs: update changelog for ${{ github.ref_name }} release [skip changelog]"
-        git push
+        git push origin main
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
