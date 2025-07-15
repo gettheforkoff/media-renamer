@@ -162,7 +162,9 @@ class TestCLI:
         test_file = temp_dir / "Movie.2020.mkv"
         test_file.touch()
 
-        with patch("media_renamer.cli.FileRenamer") as mock_renamer_class:
+        with patch("media_renamer.cli.FileRenamer") as mock_renamer_class, patch.dict(
+            os.environ, {"TMDB_API_KEY": "", "TVDB_API_KEY": ""}, clear=False
+        ):
             mock_renamer = Mock()
             mock_renamer_class.return_value = mock_renamer
             mock_renamer.process_directory.return_value = []
@@ -170,7 +172,7 @@ class TestCLI:
             result = self.runner.invoke(main, [str(temp_dir)])
 
             assert result.exit_code == 0
-            assert "Warning: No API keys provided" in result.output
+            assert "Warning: No API keys provided. Limited metadata will be available." in result.output
 
     def test_main_with_environment_variables(self, temp_dir):
         """Test main CLI function with environment variables"""
@@ -187,7 +189,7 @@ class TestCLI:
             result = self.runner.invoke(main, [str(temp_dir)])
 
             assert result.exit_code == 0
-            assert "Warning: No API keys provided" not in result.output
+            assert "Warning: No API keys provided. Limited metadata will be available." not in result.output
 
             # Check that config was loaded from environment
             args, kwargs = mock_renamer_class.call_args
@@ -256,7 +258,7 @@ class TestCLI:
 
             assert result.exit_code == 0
             assert "✓" in result.output  # Success indicator
-            assert "Renamed 1 files successfully" in result.output
+            assert "Would rename 1 files successfully" in result.output
 
     def test_main_with_failed_results(self, temp_dir):
         """Test main CLI function with failed rename results"""
@@ -318,7 +320,7 @@ class TestCLI:
             assert result.exit_code == 0
             assert "✓" in result.output  # Success indicator
             assert "✗" in result.output  # Failure indicator
-            assert "Renamed 1 files successfully" in result.output
+            assert "Would rename 1 files successfully" in result.output
             assert "Failed to rename 1 files" in result.output
 
     def test_display_results_with_successful_results(self, temp_dir):
