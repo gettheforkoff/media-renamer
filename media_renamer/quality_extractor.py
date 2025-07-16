@@ -2,7 +2,7 @@ import logging
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 try:
     from pymediainfo import MediaInfo
@@ -26,7 +26,7 @@ class QualityInfo:
 
     # Source/Quality
     source: Optional[str] = None  # "WEBDL", "BluRay", "HDTV", "DVD"
-    quality_tags: Optional[list[str]] = None  # ["Proper", "REPACK", etc.]
+    quality_tags: Optional[List[str]] = None  # ["Proper", "REPACK", etc.]
 
     # Release info
     release_group: Optional[str] = None  # "Kitsune", "AMZN", etc.
@@ -266,7 +266,7 @@ class QualityExtractor:
 
         return merged_info
 
-    def _extract_pattern(self, text: str, patterns: list[str]) -> Optional[str]:
+    def _extract_pattern(self, text: str, patterns: List[str]) -> Optional[str]:
         """Extract first matching pattern from text"""
         for pattern in patterns:
             match = re.search(pattern, text, re.IGNORECASE)
@@ -274,7 +274,7 @@ class QualityExtractor:
                 return match.group(1) if match.groups() else match.group(0)
         return None
 
-    def _extract_all_patterns(self, text: str, patterns: list[str]) -> list[str]:
+    def _extract_all_patterns(self, text: str, patterns: List[str]) -> List[str]:
         """Extract all matching patterns from text"""
         results = []
         for pattern in patterns:
