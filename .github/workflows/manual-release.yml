@@ -232,10 +232,68 @@ jobs:
         ref: ${{ needs.validate-version.outputs.version }}
         fetch-depth: 0
 
-    - name: Download all artifacts
+    - name: Download Linux binary
       uses: actions/download-artifact@v4
       with:
-        path: artifacts
+        name: media-renamer-linux-amd64
+        path: artifacts/media-renamer-linux-amd64
+      continue-on-error: true
+
+    - name: Download macOS binary
+      uses: actions/download-artifact@v4
+      with:
+        name: media-renamer-macos-universal
+        path: artifacts/media-renamer-macos-universal
+      continue-on-error: true
+
+    - name: Download Windows binary
+      uses: actions/download-artifact@v4
+      with:
+        name: media-renamer-windows-amd64
+        path: artifacts/media-renamer-windows-amd64
+      continue-on-error: true
+
+    - name: Debug artifact structure
+      run: |
+        echo "Artifact directory structure:"
+        find artifacts -type f -ls
+        echo "Files found:"
+        find artifacts -name "media-renamer*" -type f
+        echo "Detailed listing:"
+        ls -la artifacts/
+        for dir in artifacts/*/; do
+          echo "Contents of $dir:"
+          ls -la "$dir"
+        done
+    
+    - name: Prepare release assets
+      run: |
+        mkdir -p release-assets
+        
+        # Copy artifacts that exist, skip if they don't exist
+        if [ -f artifacts/media-renamer-linux-amd64/media-renamer ]; then
+          cp artifacts/media-renamer-linux-amd64/media-renamer release-assets/media-renamer-linux-amd64
+          echo "✅ Linux binary added"
+        else
+          echo "❌ Linux binary not found"
+        fi
+        
+        if [ -f artifacts/media-renamer-macos-universal/media-renamer ]; then
+          cp artifacts/media-renamer-macos-universal/media-renamer release-assets/media-renamer-macos-universal
+          echo "✅ macOS binary added"
+        else
+          echo "❌ macOS binary not found"
+        fi
+        
+        if [ -f artifacts/media-renamer-windows-amd64/media-renamer.exe ]; then
+          cp artifacts/media-renamer-windows-amd64/media-renamer.exe release-assets/media-renamer-windows-amd64.exe
+          echo "✅ Windows binary added"
+        else
+          echo "❌ Windows binary not found"
+        fi
+        
+        echo "Release assets prepared:"
+        ls -la release-assets/
 
     - name: Generate release notes
       id: release_notes
@@ -290,8 +348,5 @@ jobs:
         body: ${{ steps.release_notes.outputs.release_notes }}
         draft: ${{ github.event.inputs.draft }}
         prerelease: ${{ github.event.inputs.prerelease }}
-        files: |
-          artifacts/media-renamer-linux-amd64/media-renamer
-          artifacts/media-renamer-macos-universal/media-renamer
-          artifacts/media-renamer-windows-amd64/media-renamer.exe
+        files: release-assets/*
         token: ${{ secrets.GITHUB_TOKEN }}
