@@ -4,6 +4,8 @@ from typing import Optional, Union
 
 from pydantic import BaseModel, field_validator
 
+from media_renamer.quality_extractor import QualityInfo
+
 
 class MediaType(str, Enum):
     MOVIE = "movie"
@@ -26,6 +28,7 @@ class MediaInfo(BaseModel):
     tmdb_id: Optional[str] = None
     tvdb_id: Optional[str] = None
     extension: str
+    quality_info: Optional[QualityInfo] = None
 
     @field_validator("tmdb_id", "tvdb_id", mode="before")
     @classmethod

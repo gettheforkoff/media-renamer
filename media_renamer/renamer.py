@@ -6,12 +6,14 @@ from typing import List, Optional
 
 from media_renamer.config import Config
 from media_renamer.models import MediaInfo, RenameResult
+from media_renamer.quality_extractor import QualityExtractor
 
 
 class FileRenamer:
     def __init__(self, config: Config):
         self.config = config
         self.logger = logging.getLogger(__name__)
+        self.quality_extractor = QualityExtractor()
 
     def rename_file(self, media_info: MediaInfo) -> RenameResult:
         try:
@@ -92,12 +94,25 @@ class FileRenamer:
         pattern = self.config.tv_pattern
 
         title = self._sanitize_filename(media_info.title)
+        year = media_info.year or ""
         season = media_info.season or 1
         episode = media_info.episode or 1
         episode_title = self._sanitize_filename(media_info.episode_title or "")
 
+        # Generate quality string
+        quality_string = ""
+        if media_info.quality_info:
+            quality_string = self.quality_extractor.format_quality_string(
+                media_info.quality_info
+            )
+
         filename = pattern.format(
-            title=title, season=season, episode=episode, episode_title=episode_title
+            title=title,
+            year=year,
+            season=season,
+            episode=episode,
+            episode_title=episode_title,
+            quality_string=quality_string,
         )
 
         return f"{filename}{media_info.extension}"

@@ -348,7 +348,6 @@ class TestCLI:
             assert "Renamed 1 files successfully" in result.output
             assert "Failed to rename 1 files" in result.output
 
-
             # Check that dry_run was set correctly
             args, kwargs = mock_renamer_class.call_args
             config = args[0]

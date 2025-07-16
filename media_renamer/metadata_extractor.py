@@ -6,6 +6,7 @@ import guessit
 from pymediainfo import MediaInfo as PyMediaInfo
 
 from media_renamer.models import MediaInfo, MediaType
+from media_renamer.quality_extractor import QualityExtractor
 
 
 class MetadataExtractor:
@@ -16,6 +17,7 @@ class MetadataExtractor:
             r"(\d+)x(\d+)",
         ]
         self.year_pattern = r"\b(19|20)\d{2}\b"
+        self.quality_extractor = QualityExtractor()
 
     def extract_from_filename(self, file_path: Path) -> MediaInfo:
         filename = file_path.stem
@@ -43,6 +45,9 @@ class MetadataExtractor:
             elif year is not None:
                 media_type = MediaType.MOVIE
 
+        # Extract quality information
+        quality_info = self.quality_extractor.extract_quality_info(file_path)
+
         return MediaInfo(
             original_path=file_path,
             media_type=media_type,
@@ -52,6 +57,7 @@ class MetadataExtractor:
             episode=episode,
             episode_title=episode_title,
             extension=extension,
+            quality_info=quality_info,
         )
 
     def extract_from_mediainfo(self, file_path: Path) -> Optional[dict]:
