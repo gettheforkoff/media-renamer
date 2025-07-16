@@ -168,7 +168,7 @@ class TestCLI:
                 os.environ,
                 {"TMDB_API_KEY": "", "TVDB_API_KEY": "", "DRY_RUN": "false"},
                 clear=False,
-            ),
+            )
         ):
             mock_renamer = Mock()
             mock_renamer_class.return_value = mock_renamer
@@ -196,7 +196,7 @@ class TestCLI:
                     "TVDB_API_KEY": "env_tvdb_key",
                     "DRY_RUN": "false",
                 },
-            ),
+            )
         ):
             mock_renamer = Mock()
             mock_renamer_class.return_value = mock_renamer
@@ -260,7 +260,7 @@ class TestCLI:
 
         with (
             patch("media_renamer.cli.FileRenamer") as mock_renamer_class,
-            patch.dict(os.environ, {"DRY_RUN": "false"}, clear=False),
+            patch.dict(os.environ, {"DRY_RUN": "false"}, clear=False)
         ):
             mock_renamer = Mock()
             mock_renamer_class.return_value = mock_renamer
@@ -318,7 +318,7 @@ class TestCLI:
 
         with (
             patch("media_renamer.cli.FileRenamer") as mock_renamer_class,
-            patch.dict(os.environ, {"DRY_RUN": "false"}, clear=False),
+            patch.dict(os.environ, {"DRY_RUN": "false"}, clear=False)
         ):
             mock_renamer = Mock()
             mock_renamer_class.return_value = mock_renamer

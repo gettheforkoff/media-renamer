@@ -31,7 +31,7 @@ class TestFullWorkflow:
         # Mock API responses
         with (
             patch("media_renamer.metadata_extractor.guessit.guessit") as mock_guessit,
-            patch("media_renamer.api_clients.TMDBClient") as mock_tmdb_class,
+            patch("media_renamer.api_clients.TMDBClient") as mock_tmdb_class
         ):
             # Mock guessit responses
             def mock_guessit_side_effect(filename):
@@ -140,7 +140,7 @@ class TestFullWorkflow:
             patch("media_renamer.metadata_extractor.guessit.guessit") as mock_guessit,
             patch(
                 "media_renamer.api_clients.APIClientManager"
-            ) as mock_api_manager_class,
+            ) as mock_api_manager_class
         ):
             # Mock guessit responses
             def mock_guessit_side_effect(filename):
@@ -256,7 +256,7 @@ class TestFullWorkflow:
             patch("media_renamer.metadata_extractor.guessit.guessit") as mock_guessit,
             patch(
                 "media_renamer.api_clients.APIClientManager"
-            ) as mock_api_manager_class,
+            ) as mock_api_manager_class
         ):
             # Mock guessit responses
             def mock_guessit_side_effect(filename):
@@ -355,7 +355,7 @@ class TestFullWorkflow:
             patch("media_renamer.metadata_extractor.guessit.guessit") as mock_guessit,
             patch(
                 "media_renamer.api_clients.APIClientManager"
-            ) as mock_api_manager_class,
+            ) as mock_api_manager_class
         ):
             # Mock guessit responses
             def mock_guessit_side_effect(filename):
@@ -439,7 +439,7 @@ class TestFullWorkflow:
             patch("media_renamer.metadata_extractor.guessit.guessit") as mock_guessit,
             patch(
                 "media_renamer.api_clients.APIClientManager"
-            ) as mock_api_manager_class,
+            ) as mock_api_manager_class
         ):
             # Mock guessit responses
             def mock_guessit_side_effect(filename):
@@ -507,7 +507,7 @@ class TestFullWorkflow:
         # Mock API responses with failures
         with (
             patch("media_renamer.metadata_extractor.guessit.guessit") as mock_guessit,
-            patch("media_renamer.api_clients.TMDBClient") as mock_tmdb_class,
+            patch("media_renamer.api_clients.TMDBClient") as mock_tmdb_class
         ):
             # Mock guessit to return movie info
             mock_guessit.return_value = {

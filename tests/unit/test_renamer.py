@@ -408,7 +408,7 @@ class TestFileRenamer:
             patch(
                 "media_renamer.metadata_extractor.MetadataExtractor"
             ) as mock_extractor,
-            patch("media_renamer.api_clients.APIClientManager") as mock_api_manager,
+            patch("media_renamer.api_clients.APIClientManager") as mock_api_manager
         ):
             mock_extractor_instance = Mock()
             mock_extractor.return_value = mock_extractor_instance
@@ -450,7 +450,7 @@ class TestFileRenamer:
             patch(
                 "media_renamer.metadata_extractor.MetadataExtractor"
             ) as mock_extractor,
-            patch("media_renamer.api_clients.APIClientManager") as mock_api_manager,
+            patch("media_renamer.api_clients.APIClientManager") as mock_api_manager
         ):
             mock_extractor_instance = Mock()
             mock_extractor.return_value = mock_extractor_instance
@@ -499,7 +499,7 @@ class TestFileRenamer:
             patch(
                 "media_renamer.metadata_extractor.MetadataExtractor"
             ) as mock_extractor,
-            patch("media_renamer.api_clients.APIClientManager") as mock_api_manager,
+            patch("media_renamer.api_clients.APIClientManager") as mock_api_manager
         ):
             mock_extractor_instance = Mock()
             mock_extractor.return_value = mock_extractor_instance

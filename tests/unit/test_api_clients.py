@@ -502,7 +502,7 @@ class TestAPIClientManager:
         """Test fallback order for API clients"""
         with (
             patch("media_renamer.api_clients.TMDBClient") as mock_tmdb_class,
-            patch("media_renamer.api_clients.TVDBClient") as mock_tvdb_class,
+            patch("media_renamer.api_clients.TVDBClient") as mock_tvdb_class
         ):
             # TMDB fails, TVDB succeeds
             mock_tmdb = Mock()
