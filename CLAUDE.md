@@ -107,7 +107,7 @@ docker-compose up --build             # Full stack with docker-compose
 **Automated Release Process** (Recommended):
 1. **Tag Creation**: `git tag v1.2.3 && git push origin v1.2.3`
 2. **Automatic Workflow**: Tag push triggers release workflow which:
-   - Runs full test suite across Python 3.8-3.13
+   - Runs full test suite across Python 3.9-3.13
    - Builds and pushes multi-platform Docker images to GHCR
    - Builds binaries for Linux, macOS, and Windows
    - Updates CHANGELOG.md with categorized commits

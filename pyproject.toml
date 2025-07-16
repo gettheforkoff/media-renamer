@@ -11,14 +11,13 @@ authors = [
 ]
 readme = "README.md"
 license = {text = "MIT"}
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: End Users/Desktop",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -90,10 +89,10 @@ ignore = [
     "E501",  # line too long, handled by black
     "B008",  # do not perform function calls in argument defaults
     "C901",  # too complex
-    "UP006", # Use dict instead of Dict (keep for Python 3.8/3.9 compatibility)
-    "UP007", # Use X | Y instead of Union (keep for Python 3.8/3.9 compatibility)  
+    "UP006", # Use dict instead of Dict (keep for compatibility)
+    "UP007", # Use X | Y instead of Union (keep for compatibility)  
     "UP035", # Use dict/list instead of typing.Dict/List (keep for compatibility)
-    "UP045", # Use X | None instead of Optional (keep for Python 3.8/3.9 compatibility)
+    "UP045", # Use X | None instead of Optional (keep for compatibility)
 ]
 
 [tool.ruff.lint.per-file-ignores]

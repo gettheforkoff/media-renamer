@@ -5,7 +5,7 @@
 
 set -e
 
-PYTHON_VERSIONS=("3.8" "3.9" "3.10" "3.11" "3.12" "3.13")
+PYTHON_VERSIONS=("3.9" "3.10" "3.11" "3.12" "3.13")
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 FAILED_VERSIONS=()
 

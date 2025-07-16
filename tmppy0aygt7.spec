@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['/var/folders/vm/g6shz35s6sj32c9lshs3xr0c0000gn/T/tmp49_a_sau.py'],
+    ['/var/folders/vm/g6shz35s6sj32c9lshs3xr0c0000gn/T/tmppy0aygt7.py'],
     pathex=[],
     binaries=[],
     datas=[],
@@ -22,7 +22,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='tmp49_a_sau',
+    name='tmppy0aygt7',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

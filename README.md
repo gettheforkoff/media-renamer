@@ -260,7 +260,7 @@ Releases are fully automated through GitHub Actions. The process is triggered by
 
 The release workflow automatically:
 
-1. **✅ Quality Checks**: Runs full test suite across Python 3.8-3.13
+1. **✅ Quality Checks**: Runs full test suite across Python 3.9-3.13
 2. **🐳 Docker Images**: Builds and pushes multi-platform images to GHCR
    - `ghcr.io/gettheforkoff/media-renamer:latest`
    - `ghcr.io/gettheforkoff/media-renamer:v1.2.3`
