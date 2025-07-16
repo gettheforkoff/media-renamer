@@ -1,0 +1,119 @@
+#!/usr/bin/env python3
+"""
+Test script to debug PyInstaller bundling
+"""
+import os
+import sys
+import tempfile
+import subprocess
+from pathlib import Path
+
+def test_library_detection():
+    """Test if libmediainfo library can be found"""
+    print("Testing library detection...")
+    
+    if sys.platform == 'linux':
+        linux_paths = [
+            '/usr/lib/x86_64-linux-gnu/libmediainfo.so.0',
+            '/usr/lib/libmediainfo.so.0', 
+            '/usr/local/lib/libmediainfo.so.0',
+            '/usr/lib64/libmediainfo.so.0',
+            '/usr/lib/aarch64-linux-gnu/libmediainfo.so.0'
+        ]
+        for lib_path in linux_paths:
+            if os.path.exists(lib_path):
+                print(f"✅ Found library at: {lib_path}")
+                return lib_path
+    
+    print("❌ No library found")
+    return None
+
+def test_pyinstaller_bundling():
+    """Test PyInstaller bundling with a minimal example"""
+    print("\nTesting PyInstaller bundling...")
+    
+    # Create a minimal test script
+    test_script = """
+import sys
+try:
+    from pymediainfo import MediaInfo
+    print("✅ pymediainfo imported successfully")
+    # Try to create a MediaInfo object
+    mi = MediaInfo
+    print("✅ MediaInfo class accessible")
+except Exception as e:
+    print(f"❌ Error: {e}")
+    sys.exit(1)
+"""
+    
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+        f.write(test_script)
+        test_file = f.name
+    
+    try:
+        # Build with PyInstaller
+        lib_path = test_library_detection()
+        if lib_path:
+            cmd = [
+                sys.executable, '-m', 'PyInstaller',
+                '--onefile',
+                '--add-binary', f'{lib_path}:pymediainfo',
+                '--hidden-import', 'pymediainfo',
+                '--clean',
+                test_file
+            ]
+        else:
+            cmd = [
+                sys.executable, '-m', 'PyInstaller',
+                '--onefile',
+                '--hidden-import', 'pymediainfo',
+                '--clean',
+                test_file
+            ]
+        
+        print(f"Running: {' '.join(cmd)}")
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        
+        if result.returncode == 0:
+            print("✅ PyInstaller build successful")
+            
+            # Try to run the binary
+            binary_name = Path(test_file).stem
+            binary_path = Path('dist') / binary_name
+            
+            if binary_path.exists():
+                print(f"✅ Binary created: {binary_path}")
+                
+                # Test the binary
+                run_result = subprocess.run([str(binary_path)], capture_output=True, text=True)
+                print(f"Binary output: {run_result.stdout}")
+                if run_result.stderr:
+                    print(f"Binary errors: {run_result.stderr}")
+                
+                return run_result.returncode == 0
+            else:
+                print("❌ Binary not found")
+                return False
+        else:
+            print("❌ PyInstaller build failed")
+            print(f"stdout: {result.stdout}")
+            print(f"stderr: {result.stderr}")
+            return False
+            
+    finally:
+        # Cleanup
+        os.unlink(test_file)
+        
+    return False
+
+if __name__ == "__main__":
+    print("PyInstaller Bundling Test")
+    print("=" * 40)
+    
+    success = test_pyinstaller_bundling()
+    
+    if success:
+        print("\n✅ Test passed: PyInstaller bundling works correctly")
+    else:
+        print("\n❌ Test failed: PyInstaller bundling has issues")
+        sys.exit(1)

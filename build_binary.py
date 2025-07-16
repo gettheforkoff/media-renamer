@@ -61,6 +61,8 @@ if sys.platform == 'linux':
         if os.path.exists(lib_path):
             # Bundle with the exact name pymediainfo expects
             libmediainfo_binaries.append((lib_path, 'pymediainfo'))
+            # Also bundle to root for fallback
+            libmediainfo_binaries.append((lib_path, '.'))
             break
 elif sys.platform == 'darwin':
     # macOS library paths
@@ -73,6 +75,8 @@ elif sys.platform == 'darwin':
         if os.path.exists(lib_path):
             # Bundle with the exact name pymediainfo expects
             libmediainfo_binaries.append((lib_path, 'pymediainfo'))
+            # Also bundle to root for fallback
+            libmediainfo_binaries.append((lib_path, '.'))
             break
 elif sys.platform == 'win32':
     # Windows DLL paths
@@ -85,6 +89,8 @@ elif sys.platform == 'win32':
         if os.path.exists(lib_path):
             # Bundle with the exact name pymediainfo expects
             libmediainfo_binaries.append((lib_path, 'pymediainfo'))
+            # Also bundle to root for fallback
+            libmediainfo_binaries.append((lib_path, '.'))
             break
 
 # Warn if libmediainfo not found
@@ -135,7 +141,7 @@ a = Analysis(
     ],
     hookspath=['.'],
     hooksconfig={},
-    runtime_hooks=[],
+    runtime_hooks=['pyi_rth_pymediainfo.py'],
     excludes=[],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
