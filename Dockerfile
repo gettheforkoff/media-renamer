@@ -27,24 +27,9 @@ RUN uv venv && \
     uv pip install -e . && \
     uv pip install pyinstaller
 
-# Build the binary directly with PyInstaller
+# Build the binary using our improved build script
 RUN . .venv/bin/activate && \
-    pyinstaller --onefile --name media-renamer \
-        --hidden-import media_renamer.cli \
-        --hidden-import media_renamer.config \
-        --hidden-import media_renamer.models \
-        --hidden-import media_renamer.metadata_extractor \
-        --hidden-import media_renamer.api_clients \
-        --hidden-import media_renamer.renamer \
-        --hidden-import guessit \
-        --hidden-import pymediainfo \
-        --hidden-import requests \
-        --hidden-import click \
-        --hidden-import rich \
-        --hidden-import pydantic \
-        --hidden-import python_dateutil \
-        --hidden-import dotenv \
-        media_renamer/main.py
+    python build_binary.py
 
 # Runtime stage
 FROM debian:12-slim AS runtime
