@@ -121,8 +121,8 @@ build_docker() {
     local repo_name=$(basename "$(git rev-parse --show-toplevel)")
     local registry_name="ghcr.io/$(git config --get remote.origin.url | sed 's/.*[:/]\([^/]*\)\/\([^/]*\)\.git/\1\/\2/' | tr '[:upper:]' '[:lower:]')"
     
-    # Check if we're logged in to Docker registry for multi-arch push
-    if ! docker info | grep -q "Username:" && ! docker system info | grep -q "ghcr.io"; then
+    # Check if we're logged in to GHCR (GitHub Container Registry)
+    if ! grep -q "ghcr.io" ~/.docker/config.json 2>/dev/null; then
         print_warning "Not logged in to Docker registry. Multi-arch images will be built but not pushed."
         print_status "To push multi-arch images, login first:"
         print_status "  echo \$GITHUB_TOKEN | docker login ghcr.io -u \$GITHUB_USERNAME --password-stdin"
@@ -157,7 +157,7 @@ build_docker() {
         --load \
         .
     
-    if docker info | grep -q "Username:" || docker system info | grep -q "ghcr.io"; then
+    if grep -q "ghcr.io" ~/.docker/config.json 2>/dev/null; then
         print_success "Multi-arch Docker image built and pushed to registry!"
         print_status "Multi-arch images available at:"
         print_status "  $registry_name:latest"
@@ -227,8 +227,8 @@ test_docker() {
 push_docker() {
     print_status "Pushing Docker images to registry..."
     
-    # Check if we're logged in to Docker Hub or another registry
-    if ! docker info | grep -q "Username:"; then
+    # Check if we're logged in to GHCR (GitHub Container Registry)
+    if ! grep -q "ghcr.io" ~/.docker/config.json 2>/dev/null; then
         print_warning "Not logged in to Docker registry. Run 'docker login' first."
         print_status "You can also push to GitHub Container Registry with:"
         print_status "  echo \$GITHUB_TOKEN | docker login ghcr.io -u \$GITHUB_USERNAME --password-stdin"
