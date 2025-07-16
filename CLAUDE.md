@@ -33,7 +33,8 @@ docker-compose up --build             # Full stack with docker-compose
 
 # Release Management
 ./scripts/release.sh test              # Run all tests and quality checks
-./scripts/release.sh docker            # Build multi-arch Docker image (linux/amd64, linux/arm64)
+./scripts/release.sh docker-local      # Build single-arch Docker image locally only
+./scripts/release.sh docker            # Build multi-arch Docker image (pushes if logged in)
 ./scripts/release.sh docker-push       # Push Docker images to GitHub Container Registry
 ./scripts/release.sh all               # Run tests + build Docker + build binary
 ./scripts/release.sh tag v1.2.3        # Create and push release tag

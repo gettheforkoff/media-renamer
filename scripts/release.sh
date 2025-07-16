@@ -114,17 +114,93 @@ build_docker() {
         docker buildx use media-renamer-builder
     fi
     
-    # Build multi-arch image
+    # Build multi-arch image - first build and push to registry for multi-arch
     print_status "Building multi-arch Docker image (linux/amd64, linux/arm64)..."
+    
+    # Get current repository info for proper tagging
+    local repo_name=$(basename "$(git rev-parse --show-toplevel)")
+    local registry_name="ghcr.io/$(git config --get remote.origin.url | sed 's/.*[:/]\([^/]*\)\/\([^/]*\)\.git/\1\/\2/' | tr '[:upper:]' '[:lower:]')"
+    
+    # Check if we're logged in to Docker registry for multi-arch push
+    if ! docker info | grep -q "Username:" && ! docker system info | grep -q "ghcr.io"; then
+        print_warning "Not logged in to Docker registry. Multi-arch images will be built but not pushed."
+        print_status "To push multi-arch images, login first:"
+        print_status "  echo \$GITHUB_TOKEN | docker login ghcr.io -u \$GITHUB_USERNAME --password-stdin"
+        
+        # Build multi-arch without push
+        docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            --target runtime \
+            -t "$registry_name:latest" \
+            -t "$registry_name:test" \
+            .
+    else
+        print_status "Docker registry login detected, pushing multi-arch images..."
+        
+        # Build multi-arch and push to registry
+        docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            --target runtime \
+            -t "$registry_name:latest" \
+            -t "$registry_name:test" \
+            --push \
+            .
+    fi
+    
+    # Also build single-arch for local testing
+    print_status "Building single-arch image for local testing..."
     docker buildx build \
-        --platform linux/amd64,linux/arm64 \
+        --platform linux/amd64 \
         --target runtime \
         -t media-renamer:test \
         -t media-renamer:latest \
         --load \
         .
     
-    print_success "Multi-arch Docker image built successfully!"
+    if docker info | grep -q "Username:" || docker system info | grep -q "ghcr.io"; then
+        print_success "Multi-arch Docker image built and pushed to registry!"
+        print_status "Multi-arch images available at:"
+        print_status "  $registry_name:latest"
+        print_status "  $registry_name:test"
+    else
+        print_success "Multi-arch Docker image built (not pushed)!"
+    fi
+    print_success "Local single-arch image built for testing!"
+}
+
+# Build Docker image locally only (no registry push)
+build_docker_local() {
+    print_status "Building Docker image locally..."
+    
+    # Check if docker buildx is available
+    if ! docker buildx version >/dev/null 2>&1; then
+        print_warning "Docker buildx not available, building single-arch image..."
+        docker build -t media-renamer:test --target runtime .
+        docker tag media-renamer:test media-renamer:latest
+        print_success "Docker image built successfully!"
+        return
+    fi
+    
+    # Create buildx builder if it doesn't exist
+    if ! docker buildx inspect media-renamer-builder >/dev/null 2>&1; then
+        print_status "Creating Docker buildx builder..."
+        docker buildx create --name media-renamer-builder --use
+    else
+        print_status "Using existing Docker buildx builder..."
+        docker buildx use media-renamer-builder
+    fi
+    
+    # Build single-arch for local testing only
+    print_status "Building single-arch image for local testing..."
+    docker buildx build \
+        --platform linux/amd64 \
+        --target runtime \
+        -t media-renamer:test \
+        -t media-renamer:latest \
+        --load \
+        .
+    
+    print_success "Local Docker image built successfully!"
 }
 
 # Test Docker image
@@ -265,6 +341,11 @@ main() {
             build_docker
             test_docker
             ;;
+        "docker-local")
+            check_dependencies
+            build_docker_local
+            test_docker
+            ;;
         "docker-push")
             check_dependencies
             push_docker
@@ -292,7 +373,8 @@ main() {
             echo "Commands:"
             echo "  deps         Check dependencies"
             echo "  test         Run tests and code quality checks"
-            echo "  docker       Build and test multi-arch Docker image"
+            echo "  docker       Build and test multi-arch Docker image (pushes if logged in)"
+            echo "  docker-local Build and test single-arch Docker image locally only"
             echo "  docker-push  Push Docker images to registry"
             echo "  binary       Build and test binary"
             echo "  all          Run all tests and builds"
@@ -300,7 +382,8 @@ main() {
             echo ""
             echo "Examples:"
             echo "  $0 test"
-            echo "  $0 docker       # Build multi-arch image with latest tag"
+            echo "  $0 docker-local # Build single-arch image for local testing"
+            echo "  $0 docker       # Build multi-arch image (pushes if logged in)"
             echo "  $0 docker-push  # Push to GitHub Container Registry"
             echo "  $0 all"
             echo "  $0 tag v1.2.3"
