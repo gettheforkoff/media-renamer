@@ -90,30 +90,23 @@ except Exception as e:
                 if run_result.stderr:
                     print(f"Binary errors: {run_result.stderr}")
                 
-                return run_result.returncode == 0
+                assert run_result.returncode == 0, f"Binary execution failed: {run_result.stderr}"
             else:
-                print("❌ Binary not found")
-                return False
+                assert False, "Binary not found"
         else:
-            print("❌ PyInstaller build failed")
-            print(f"stdout: {result.stdout}")
-            print(f"stderr: {result.stderr}")
-            return False
+            assert False, f"PyInstaller build failed: stdout={result.stdout}, stderr={result.stderr}"
             
     finally:
         # Cleanup
         os.unlink(test_file)
-        
-    return False
 
 if __name__ == "__main__":
     print("PyInstaller Bundling Test")
     print("=" * 40)
     
-    success = test_pyinstaller_bundling()
-    
-    if success:
+    try:
+        test_pyinstaller_bundling()
         print("\n✅ Test passed: PyInstaller bundling works correctly")
-    else:
-        print("\n❌ Test failed: PyInstaller bundling has issues")
+    except Exception as e:
+        print(f"\n❌ Test failed: {e}")
         sys.exit(1)

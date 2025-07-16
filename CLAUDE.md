@@ -135,6 +135,15 @@ docker-compose up --build             # Full stack with docker-compose
 
 ## Important Implementation Notes
 
+- **ALWAYS RUN TESTS BEFORE COMMITTING**: Before any commit, you MUST run:
+  ```bash
+  uv run pytest                    # Run all tests
+  uv run black media_renamer/      # Format code
+  uv run ruff check media_renamer/ # Lint code
+  uv run mypy media_renamer/       # Type checking
+  ```
+  Or use `./scripts/release.sh test` to run all quality checks at once.
+
 - **API Client Testing**: Always mock `APIClientManager` rather than individual clients in integration tests
 - **File Permissions**: `shutil.move()` automatically preserves permissions, ownership, and timestamps
 - **Error Handling**: All operations return result objects with success/error states rather than raising exceptions
