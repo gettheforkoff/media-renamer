@@ -270,32 +270,37 @@ jobs:
         PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
         CURRENT_TAG=${GITHUB_REF#refs/tags/}
         
-        echo "## What's Changed" > changelog.md
+        echo "## 🚀 What's New in $CURRENT_TAG" > changelog.md
         echo "" >> changelog.md
         
         if [ -n "$PREV_TAG" ]; then
-          # Get commits since last tag
-          git log --pretty=format:"- %s (%h)" $PREV_TAG..HEAD >> changelog.md
+          echo "### 📝 Changes since $PREV_TAG" >> changelog.md
+          echo "" >> changelog.md
+          git log --pretty=format:"- %s (%h)" $PREV_TAG..HEAD --no-merges >> changelog.md
         else
-          # First release - get all commits
-          git log --pretty=format:"- %s (%h)" >> changelog.md
+          echo "### 📝 Initial Release" >> changelog.md
+          echo "" >> changelog.md
+          echo "This is the first release of media-renamer!" >> changelog.md
         fi
         
         echo "" >> changelog.md
-        echo "## Docker Images" >> changelog.md
+        echo "## 🐳 Docker Images" >> changelog.md
         echo "" >> changelog.md
-        echo "- \`ghcr.io/${{ github.repository }}:${CURRENT_TAG}\`" >> changelog.md
-        echo "- \`ghcr.io/${{ github.repository }}:latest\`" >> changelog.md
+        echo "```bash" >> changelog.md
+        echo "# Latest release" >> changelog.md
+        echo "docker pull ghcr.io/${{ github.repository }}:$CURRENT_TAG" >> changelog.md
         echo "" >> changelog.md
-        echo "## Installation" >> changelog.md
+        echo "# Specific version" >> changelog.md
+        echo "docker pull ghcr.io/${{ github.repository }}:latest" >> changelog.md
+        echo "```" >> changelog.md
         echo "" >> changelog.md
-        echo "### Docker" >> changelog.md
-        echo "\`\`\`bash" >> changelog.md
-        echo "docker pull ghcr.io/${{ github.repository }}:${CURRENT_TAG}" >> changelog.md
-        echo "\`\`\`" >> changelog.md
+        echo "## 📦 Binary Downloads" >> changelog.md
         echo "" >> changelog.md
-        echo "### Binary Downloads" >> changelog.md
-        echo "Download the appropriate binary for your platform from the assets below." >> changelog.md
+        echo "Download the appropriate binary for your platform from the assets below:" >> changelog.md
+        echo "" >> changelog.md
+        echo "- **Linux (x64)**: \`media-renamer-linux-amd64\`" >> changelog.md
+        echo "- **macOS (Universal)**: \`media-renamer-macos-universal\`" >> changelog.md
+        echo "- **Windows (x64)**: \`media-renamer-windows-amd64.exe\`" >> changelog.md
         
         # Set output for use in release creation
         echo "changelog<<EOF" >> $GITHUB_OUTPUT
