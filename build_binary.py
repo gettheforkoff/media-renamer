@@ -50,7 +50,7 @@ import sys
 import platform
 
 if sys.platform == 'linux':
-    # Linux library paths
+    # Linux library paths - bundle with the exact name pymediainfo expects
     linux_paths = [
         '/usr/lib/x86_64-linux-gnu/libmediainfo.so.0',
         '/usr/lib/libmediainfo.so.0', 
@@ -59,7 +59,8 @@ if sys.platform == 'linux':
     ]
     for lib_path in linux_paths:
         if os.path.exists(lib_path):
-            libmediainfo_binaries.append((lib_path, '.'))
+            # Bundle with the exact name pymediainfo expects
+            libmediainfo_binaries.append((lib_path, 'pymediainfo'))
             break
 elif sys.platform == 'darwin':
     # macOS library paths
@@ -70,7 +71,8 @@ elif sys.platform == 'darwin':
     ]
     for lib_path in macos_paths:
         if os.path.exists(lib_path):
-            libmediainfo_binaries.append((lib_path, '.'))
+            # Bundle with the exact name pymediainfo expects
+            libmediainfo_binaries.append((lib_path, 'pymediainfo'))
             break
 elif sys.platform == 'win32':
     # Windows DLL paths
@@ -81,7 +83,8 @@ elif sys.platform == 'win32':
     ]
     for lib_path in windows_paths:
         if os.path.exists(lib_path):
-            libmediainfo_binaries.append((lib_path, '.'))
+            # Bundle with the exact name pymediainfo expects
+            libmediainfo_binaries.append((lib_path, 'pymediainfo'))
             break
 
 # Warn if libmediainfo not found
@@ -130,7 +133,7 @@ a = Analysis(
         'dateutil',
         'dotenv',
     ],
-    hookspath=[],
+    hookspath=['.'],
     hooksconfig={},
     runtime_hooks=[],
     excludes=[],
