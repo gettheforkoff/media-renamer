@@ -32,8 +32,7 @@ def build_binary():
     
     # Create a temporary spec file for PyInstaller with data collection
     spec_content = """# -*- mode: python ; coding: utf-8 -*-
-from PyInstaller.utils.hooks import collect_data_files, collect_dynamic_libs
-import os
+from PyInstaller.utils.hooks import collect_data_files
 
 block_cipher = None
 
@@ -41,73 +40,13 @@ block_cipher = None
 babelfish_datas = collect_data_files('babelfish')
 guessit_datas = collect_data_files('guessit')
 
-# Collect dynamic libraries for pymediainfo
-pymediainfo_binaries = collect_dynamic_libs('pymediainfo')
-
-# Try to find system libmediainfo library based on platform
-libmediainfo_binaries = []
-import sys
-import platform
-
-if sys.platform == 'linux':
-    # Linux library paths - bundle with the exact name pymediainfo expects
-    linux_paths = [
-        '/usr/lib/x86_64-linux-gnu/libmediainfo.so.0',
-        '/usr/lib/libmediainfo.so.0', 
-        '/usr/local/lib/libmediainfo.so.0',
-        '/usr/lib64/libmediainfo.so.0'
-    ]
-    for lib_path in linux_paths:
-        if os.path.exists(lib_path):
-            # Bundle with the exact name pymediainfo expects
-            libmediainfo_binaries.append((lib_path, 'pymediainfo'))
-            # Also bundle to root for fallback
-            libmediainfo_binaries.append((lib_path, '.'))
-            break
-elif sys.platform == 'darwin':
-    # macOS library paths
-    macos_paths = [
-        '/usr/local/lib/libmediainfo.dylib',
-        '/opt/homebrew/lib/libmediainfo.dylib',
-        '/usr/lib/libmediainfo.dylib'
-    ]
-    for lib_path in macos_paths:
-        if os.path.exists(lib_path):
-            # Bundle with the exact name pymediainfo expects
-            libmediainfo_binaries.append((lib_path, 'pymediainfo'))
-            # Also bundle to root for fallback
-            libmediainfo_binaries.append((lib_path, '.'))
-            break
-elif sys.platform == 'win32':
-    # Windows DLL paths
-    windows_paths = [
-        'C:\\Windows\\System32\\MediaInfo.dll',
-        'C:\\Program Files\\MediaInfo\\MediaInfo.dll',
-        'C:\\Program Files (x86)\\MediaInfo\\MediaInfo.dll'
-    ]
-    for lib_path in windows_paths:
-        if os.path.exists(lib_path):
-            # Bundle with the exact name pymediainfo expects
-            libmediainfo_binaries.append((lib_path, 'pymediainfo'))
-            # Also bundle to root for fallback
-            libmediainfo_binaries.append((lib_path, '.'))
-            break
-
-# Warn if libmediainfo not found
-if not libmediainfo_binaries:
-    print("WARNING: libmediainfo library not found on this system.")
-    print("The binary may not work properly for quality analysis.")
-    if sys.platform == 'linux':
-        print("Install with: sudo apt-get install libmediainfo0v5")
-    elif sys.platform == 'darwin':
-        print("Install with: brew install libmediainfo")
-    elif sys.platform == 'win32':
-        print("Download from: https://mediaarea.net/en/MediaInfo/Download/Windows")
+# Note: pymediainfo libraries are handled by the official PyInstaller hook
+# from _pyinstaller_hooks_contrib package
 
 a = Analysis(
     ['media_renamer/main.py'],
     pathex=[],
-    binaries=pymediainfo_binaries + libmediainfo_binaries,
+    binaries=[],
     datas=babelfish_datas + guessit_datas,
     hiddenimports=[
         'media_renamer.cli',
@@ -139,9 +78,9 @@ a = Analysis(
         'dateutil',
         'dotenv',
     ],
-    hookspath=['.'],
+    hookspath=[],
     hooksconfig={},
-    runtime_hooks=['pyi_rth_pymediainfo.py'],
+    runtime_hooks=[],
     excludes=[],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
