@@ -19,6 +19,9 @@ WORKDIR /build
 # Copy project files
 COPY pyproject.toml ./
 COPY README.md ./
+COPY build_binary.py ./
+COPY hook-pymediainfo.py ./
+COPY pyi_rth_pymediainfo.py ./
 COPY media_renamer/ ./media_renamer/
 
 # Install dependencies and PyInstaller using uv
