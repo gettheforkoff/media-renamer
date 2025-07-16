@@ -95,8 +95,36 @@ run_tests() {
 # Build Docker image
 build_docker() {
     print_status "Building Docker image..."
-    docker build -t media-renamer:test --target runtime .
-    print_success "Docker image built successfully!"
+    
+    # Check if docker buildx is available
+    if ! docker buildx version >/dev/null 2>&1; then
+        print_warning "Docker buildx not available, building single-arch image..."
+        docker build -t media-renamer:test --target runtime .
+        docker tag media-renamer:test media-renamer:latest
+        print_success "Docker image built successfully!"
+        return
+    fi
+    
+    # Create buildx builder if it doesn't exist
+    if ! docker buildx inspect media-renamer-builder >/dev/null 2>&1; then
+        print_status "Creating Docker buildx builder..."
+        docker buildx create --name media-renamer-builder --use
+    else
+        print_status "Using existing Docker buildx builder..."
+        docker buildx use media-renamer-builder
+    fi
+    
+    # Build multi-arch image
+    print_status "Building multi-arch Docker image (linux/amd64, linux/arm64)..."
+    docker buildx build \
+        --platform linux/amd64,linux/arm64 \
+        --target runtime \
+        -t media-renamer:test \
+        -t media-renamer:latest \
+        --load \
+        .
+    
+    print_success "Multi-arch Docker image built successfully!"
 }
 
 # Test Docker image
@@ -117,6 +145,39 @@ test_docker() {
     rm -rf /tmp/media-renamer-test
     
     print_success "Docker image test completed!"
+}
+
+# Push Docker images to registry
+push_docker() {
+    print_status "Pushing Docker images to registry..."
+    
+    # Check if we're logged in to Docker Hub or another registry
+    if ! docker info | grep -q "Username:"; then
+        print_warning "Not logged in to Docker registry. Run 'docker login' first."
+        print_status "You can also push to GitHub Container Registry with:"
+        print_status "  echo \$GITHUB_TOKEN | docker login ghcr.io -u \$GITHUB_USERNAME --password-stdin"
+        return
+    fi
+    
+    # Get current repository info
+    local repo_name=$(basename "$(git rev-parse --show-toplevel)")
+    local registry_name="ghcr.io/$(git config --get remote.origin.url | sed 's/.*[:/]\([^/]*\)\/\([^/]*\)\.git/\1\/\2/' | tr '[:upper:]' '[:lower:]')"
+    
+    print_status "Tagging images for registry: $registry_name"
+    
+    # Tag for registry
+    docker tag media-renamer:latest "$registry_name:latest"
+    docker tag media-renamer:test "$registry_name:test"
+    
+    # Push to registry
+    print_status "Pushing to registry..."
+    docker push "$registry_name:latest"
+    docker push "$registry_name:test"
+    
+    print_success "Docker images pushed successfully!"
+    print_status "Images available at:"
+    print_status "  $registry_name:latest"
+    print_status "  $registry_name:test"
 }
 
 # Build binary
@@ -204,6 +265,10 @@ main() {
             build_docker
             test_docker
             ;;
+        "docker-push")
+            check_dependencies
+            push_docker
+            ;;
         "binary")
             check_dependencies
             build_binary
@@ -227,13 +292,16 @@ main() {
             echo "Commands:"
             echo "  deps         Check dependencies"
             echo "  test         Run tests and code quality checks"
-            echo "  docker       Build and test Docker image"
+            echo "  docker       Build and test multi-arch Docker image"
+            echo "  docker-push  Push Docker images to registry"
             echo "  binary       Build and test binary"
             echo "  all          Run all tests and builds"
             echo "  tag <version> Create and push release tag"
             echo ""
             echo "Examples:"
             echo "  $0 test"
+            echo "  $0 docker       # Build multi-arch image with latest tag"
+            echo "  $0 docker-push  # Push to GitHub Container Registry"
             echo "  $0 all"
             echo "  $0 tag v1.2.3"
             ;;
