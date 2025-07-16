@@ -12,6 +12,7 @@ def test_library_detection():
     """Test if libmediainfo library can be found"""
     print("Testing library detection...")
     
+    lib_path = None
     if sys.platform == 'linux':
         linux_paths = [
             '/usr/lib/x86_64-linux-gnu/libmediainfo.so.0',
@@ -23,10 +24,11 @@ def test_library_detection():
         for lib_path in linux_paths:
             if os.path.exists(lib_path):
                 print(f"✅ Found library at: {lib_path}")
+                assert lib_path is not None, "Library path should not be None when found"
                 return lib_path
     
     print("❌ No library found")
-    return None
+    return lib_path
 
 def test_pyinstaller_bundling():
     """Test PyInstaller bundling with a minimal example"""
