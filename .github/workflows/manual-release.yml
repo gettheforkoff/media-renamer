@@ -93,7 +93,8 @@ jobs:
         VERSION="${{ needs.validate-version.outputs.version }}"
         # Remove 'v' prefix for pyproject.toml
         CLEAN_VERSION=${VERSION#v}
-        sed -i "s/version = \".*\"/version = \"$CLEAN_VERSION\"/" pyproject.toml
+        # Only update the project version (line 7), not tool configurations
+        sed -i "7s/version = \".*\"/version = \"$CLEAN_VERSION\"/" pyproject.toml
 
     - name: Commit version bump
       run: |
