@@ -33,7 +33,7 @@ RUN . .venv/bin/activate && \
     python build_binary.py
 
 # Runtime stage
-FROM debian:12-slim AS runtime
+FROM debian:13-slim AS runtime
 
 # Install only runtime dependencies
 RUN apt-get update && apt-get install -y \
